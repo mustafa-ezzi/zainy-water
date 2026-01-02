@@ -1,0 +1,1 @@
+ALTER TABLE "Customer" ADD COLUMN "customerSince" timestamp with time zone DEFAULT now() NOT NULL;

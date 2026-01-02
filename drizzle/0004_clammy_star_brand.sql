@@ -1,0 +1,1 @@
+ALTER TABLE "Customer" ALTER COLUMN "deposit_price" SET DEFAULT 1000;

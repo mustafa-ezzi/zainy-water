@@ -1,0 +1,1 @@
+ALTER TABLE "BottleUsage" ADD COLUMN "damaged_bottles" integer DEFAULT 0 NOT NULL;

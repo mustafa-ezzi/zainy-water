@@ -1,0 +1,188 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1754546345976,
+      "tag": "0000_tearful_loa",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1754674623130,
+      "tag": "0001_rapid_dark_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754680532623,
+      "tag": "0002_normal_harrier",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1755174603230,
+      "tag": "0003_lowly_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755174656896,
+      "tag": "0004_clammy_star_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1755174709363,
+      "tag": "0005_burly_tigra",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1755174814902,
+      "tag": "0006_slimy_colleen_wing",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1755236055513,
+      "tag": "0007_special_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1755950552641,
+      "tag": "0008_handy_red_wolf",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1755954135362,
+      "tag": "0009_slippery_nebula",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755955114098,
+      "tag": "0010_cute_valeria_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1756636735155,
+      "tag": "0011_violet_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1756638242553,
+      "tag": "0012_outstanding_butterfly",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1757241185949,
+      "tag": "0013_youthful_grim_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1757402358192,
+      "tag": "0014_young_inhumans",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1757412499606,
+      "tag": "0015_organic_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1757513701159,
+      "tag": "0016_dark_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1757573945783,
+      "tag": "0017_third_mach_iv",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1757953835081,
+      "tag": "0018_stiff_payback",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1757954327191,
+      "tag": "0019_solid_christian_walker",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1760774914190,
+      "tag": "0020_young_talon",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1760775996224,
+      "tag": "0021_gifted_chamber",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1760786032158,
+      "tag": "0022_smooth_sir_ram",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1760788546329,
+      "tag": "0023_strange_salo",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1760886506541,
+      "tag": "0024_left_captain_britain",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1760895587733,
+      "tag": "0025_purple_dark_beast",
+      "breakpoints": true
+    }
+  ]
+}

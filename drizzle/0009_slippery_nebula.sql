@@ -1,0 +1,1 @@
+ALTER TABLE "Admin" DROP COLUMN "license_key";

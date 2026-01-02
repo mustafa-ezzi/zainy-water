@@ -1,0 +1,1 @@
+ALTER TYPE "public"."Area" ADD VALUE 'Essa Mohalla' BEFORE 'FB Area (Blocks 1–22)';

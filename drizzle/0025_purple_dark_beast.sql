@@ -1,0 +1,1 @@
+ALTER TABLE "Miscellaneous" ADD COLUMN "delivery_date" timestamp with time zone DEFAULT now() NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE "Customer" ADD COLUMN "deposit_price" integer NOT NULL;

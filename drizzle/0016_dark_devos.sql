@@ -1,0 +1,1 @@
+ALTER TABLE "TotalBottles" ADD COLUMN "deposit_bottles" integer DEFAULT 0 NOT NULL;
