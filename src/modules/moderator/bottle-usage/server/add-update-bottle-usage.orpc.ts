@@ -76,7 +76,8 @@ export const addUpdateBottleUsage = os
             moderator_id: input.moderator_id,
             filled_bottles: input.filled_bottles,
             empty_bottles: previousBottleUsage?.empty_bottles ?? 0,
-            remaining_bottles: previousBottleUsage?.remaining_bottles ?? 0,
+            remaining_bottles: (previousBottleUsage?.remaining_bottles ?? 0) + input.filled_bottles,
+            caps: input.caps,
             createdAt: from,
           }),
           tx

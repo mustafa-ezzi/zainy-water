@@ -235,26 +235,33 @@ const columns: ColumnDef<columnSchema>[] = [
     ),
   },
   {
-    accessorKey: "returned_bottles",
-    header: () => <div className="w-full text-center">Returned</div>,
-    cell: ({ row }) => (
-      <Tooltip>
-        <TooltipTrigger className="w-full flex justify-end">
-          <div className="w-full text-right">
-            {row.original.bottleUsage.returned_bottles}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="grid grid-cols-5">
-            <p className="col-span-4">Empty Returned:</p>
-            <p className="text-right">{`{ ${row.original.bottleUsage.empty_returned} }`}</p>
-            <p className="col-span-4">Remaining Returned:</p>
-            <p className="text-right">{`{ ${row.original.bottleUsage.remaining_returned} }`}</p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    ),
-  },
+  accessorKey: "returned_bottles",
+  header: () => <div className="w-full text-center">Returned</div>,
+  cell: ({ row }) => (
+    <div className="w-full text-right">
+      {row.original.bottleUsage.returned_bottles}
+    </div>
+  ),
+},
+{
+  accessorKey: "empty_returned",
+  header: () => <div className="w-full text-center">Empty Returned</div>,
+  cell: ({ row }) => (
+    <div className="w-full text-right">
+      {row.original.bottleUsage.empty_returned}
+    </div>
+  ),
+},
+{
+  accessorKey: "remaining_returned",
+  header: () => <div className="w-full text-center">Remaining Returned</div>,
+  cell: ({ row }) => (
+    <div className="w-full text-right">
+      {row.original.bottleUsage.remaining_returned}
+    </div>
+  ),
+},
+
   {
     accessorKey: "damaged_bottles",
     header: () => <div className="w-full text-center">Damaged</div>,

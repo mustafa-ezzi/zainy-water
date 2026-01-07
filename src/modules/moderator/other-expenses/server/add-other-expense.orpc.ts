@@ -10,7 +10,7 @@ export const otherExpenseDataSchema = z.object({
   refilled_bottles: z.number(),
   amount: z.number(),
   description: z.string(),
-  date: z.date(),
+  date: z.coerce.date(), // 👈 THIS IS THE FIX
 });
 
 export const addOtherExpense = os

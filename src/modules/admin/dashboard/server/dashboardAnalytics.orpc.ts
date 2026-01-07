@@ -23,7 +23,7 @@ export const DashboardAnalyticsSchema = z.object({
   damagedBottles: z.number(),
   expenses: z.number(),
 });
-
+  
 export const dashboardAnalyticsOrpc = adminProcedure
   .input(z.void())
   .output(DashboardAnalyticsSchema)
