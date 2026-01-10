@@ -10,7 +10,7 @@ export const otherExpenseDataSchema = z.object({
   refilled_bottles: z.number(),
   amount: z.number(),
   description: z.string(),
-  date: z.coerce.date(), // 👈 THIS IS THE FIX
+  date: z.coerce.date(),
 });
 
 export const addOtherExpense = os
@@ -22,10 +22,6 @@ export const addOtherExpense = os
     ])
   )
   .errors({
-    BOTTLE_USAGE_404: {
-      status: 404,
-      message: "Bottle usage record not found for the given date",
-    },
     BAD_REQUEST: {
       status: 400,
       message:
@@ -35,7 +31,8 @@ export const addOtherExpense = os
   .handler(async ({ input, errors }) => {
     try {
       if (input.refilled_bottles > 0) {
-        const [bottleUsage] = await db
+        // 1️⃣ Get usage for selected date
+        let [usage] = await db
           .select()
           .from(BottleUsage)
           .where(
@@ -48,29 +45,54 @@ export const addOtherExpense = os
           .orderBy(desc(BottleUsage.createdAt))
           .limit(1);
 
-        if (!bottleUsage) {
-          throw errors.BOTTLE_USAGE_404();
+        // 2️⃣ If not found → clone from latest
+        if (!usage) {
+          const [latestUsage] = await db
+            .select()
+            .from(BottleUsage)
+            .where(eq(BottleUsage.moderator_id, input.moderator_id))
+            .orderBy(desc(BottleUsage.createdAt))
+            .limit(1);
+
+          const [inserted] = await db
+            .insert(BottleUsage)
+            .values({
+              moderator_id: input.moderator_id,
+              empty_bottles: latestUsage?.empty_bottles ?? 0,
+              remaining_bottles: latestUsage?.remaining_bottles ?? 0,
+              caps: latestUsage?.caps ?? 0,
+              expense: latestUsage?.expense ?? 0,
+              createdAt: input.date,
+            })
+            .returning();
+
+          usage = inserted;
         }
 
+        // 3️⃣ Validation (THE REAL ONE)
         if (
-          bottleUsage.empty_bottles < input.refilled_bottles ||
-          bottleUsage.caps - bottleUsage.refilled_bottles <
-            input.refilled_bottles
+          usage.empty_bottles < input.refilled_bottles ||
+          usage.caps < input.refilled_bottles
         ) {
           throw errors.BAD_REQUEST();
         }
 
+        // 4️⃣ Update bottles correctly
         await db
           .update(BottleUsage)
           .set({
-            empty_bottles: bottleUsage.empty_bottles - input.refilled_bottles,
+            empty_bottles: usage.empty_bottles - input.refilled_bottles,
             remaining_bottles:
-              bottleUsage.remaining_bottles + input.refilled_bottles,
-            expense: bottleUsage.expense + input.amount,
+              usage.remaining_bottles + input.refilled_bottles,
+            caps: usage.caps - input.refilled_bottles,
+            refilled_bottles:
+              (usage.refilled_bottles ?? 0) + input.refilled_bottles,
+            expense: usage.expense + input.amount,
           })
-          .where(eq(BottleUsage.id, bottleUsage.id));
+          .where(eq(BottleUsage.id, usage.id));
       }
 
+      // 5️⃣ Insert expense with chosen date
       await db.insert(OtherExpense).values({
         moderator_id: input.moderator_id,
         amount: input.amount,
@@ -101,8 +123,7 @@ export const getOtherExpensesByModeratorId = os
   )
   .handler(async ({ input }) => {
     try {
-      // Fetch from database directly
-      const expenses = await db
+      return await db
         .select()
         .from(OtherExpense)
         .where(
@@ -113,8 +134,6 @@ export const getOtherExpensesByModeratorId = os
           )
         )
         .orderBy(desc(OtherExpense.date));
-
-      return expenses;
     } catch (error) {
       console.error("Error fetching other expenses:", error);
       return null;

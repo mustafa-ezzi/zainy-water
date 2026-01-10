@@ -126,7 +126,7 @@ const columns: ColumnDef<columnSchema>[] = [
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {format(row.original.OtherExpense.createdAt, "PPPP")}
+          {format(row.original.OtherExpense.date, "PPPP")}
         </Badge>
       </div>
     ),
@@ -137,7 +137,7 @@ const columns: ColumnDef<columnSchema>[] = [
     cell: ({ row }) => (
       <Badge variant="outline" className="text-muted-foreground px-1.5">
         {startOfDay(new Date()) >
-          startOfDay(row.original.OtherExpense.createdAt) ? (
+          startOfDay(row.original.OtherExpense.date) ? (
           <>
             <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />{" "}
             Done
@@ -280,11 +280,11 @@ export function DataTable5OtherExpense({
               cellValue = row.original.Moderator.name;
               break;
             case "date":
-              cellValue = format(new Date(row.original.OtherExpense.createdAt), "PPPP");
+              cellValue = format(new Date(row.original.OtherExpense.date), "PPPP");
               break;
             case "status":
               cellValue =
-                startOfDay(new Date()) > startOfDay(row.original.OtherExpense.createdAt)
+                startOfDay(new Date()) > startOfDay(row.original.OtherExpense.date)
                   ? "Done"
                   : "Today's Expense";
               break;
@@ -330,7 +330,7 @@ export function DataTable5OtherExpense({
     const to = toDate ? startOfDay(new Date(toDate)) : null;
 
     return data.filter(({ OtherExpense }) => {
-      const rowDate = startOfDay(new Date(OtherExpense.createdAt));
+      const rowDate = startOfDay(new Date(OtherExpense.date));
       if (from && to) return rowDate >= from && rowDate <= to;
       if (from) return rowDate >= from;
       if (to) return rowDate <= to;

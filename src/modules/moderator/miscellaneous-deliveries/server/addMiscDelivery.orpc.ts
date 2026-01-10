@@ -16,7 +16,7 @@ export const addMiscDelivery = os
       damaged_bottles: z.number(),
       isPaid: z.boolean(),
       payment: z.number(),
-      delivery_date: z.date(),
+      delivery_date: z.coerce.date(),
     })
   )
   .output(z.void())
@@ -51,8 +51,14 @@ export const addMiscDelivery = os
       .where(
         and(
           eq(BottleUsage.moderator_id, input.moderator_id),
-          gte(BottleUsage.createdAt, startOfDay(new Date())),
-          lte(BottleUsage.createdAt, endOfDay(new Date()))
+          gte(
+            BottleUsage.createdAt,
+            startOfDay(input.delivery_date)
+          ),
+          lte(
+            BottleUsage.createdAt,
+            endOfDay(input.delivery_date)
+          )
         )
       )
       .orderBy(desc(BottleUsage.createdAt))
@@ -70,7 +76,14 @@ export const addMiscDelivery = os
     await db.transaction(async (tx) => {
       await Promise.all([
         tx.insert(Miscellaneous).values({
-          ...input,
+          moderator_id: input.moderator_id,
+          customer_name: input.customer_name,
+          description: input.description,
+          filled_bottles: input.filled_bottles,
+          empty_bottles: input.empty_bottles,
+          damaged_bottles: input.damaged_bottles,
+          payment: input.isPaid ? input.payment : 0,
+          isPaid: input.isPaid,
           delivery_date: input.delivery_date,
         }),
 

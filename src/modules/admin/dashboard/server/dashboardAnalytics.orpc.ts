@@ -23,7 +23,7 @@ export const DashboardAnalyticsSchema = z.object({
   damagedBottles: z.number(),
   expenses: z.number(),
 });
-  
+
 export const dashboardAnalyticsOrpc = adminProcedure
   .input(z.void())
   .output(DashboardAnalyticsSchema)
@@ -106,15 +106,23 @@ export const dashboardAnalyticsOrpc = adminProcedure
         .map((e) => e.amount)
         .reduce((a, b) => a + b, 0);
 
+      const totalBottles = result.totalBottles.total_bottles || 0;
+      const usedBottles = result.totalBottles.used_bottles || 0;
+      const damagedBottles = result.totalBottles.damaged_bottles || 0;
+
+      const availableBottles =
+        totalBottles - usedBottles - damagedBottles;
+
+
       return {
         totalRevenue,
         customerCount: result.customerCount.total || 0,
         moderatorCount: result.moderatorCount.total || 0,
+        availableBottles,
+        totalBottles,
+        usedBottles,
+        damagedBottles,
         depositCount: depositCount || 0,
-        availableBottles: result.totalBottles.available_bottles || 0,
-        totalBottles: result.totalBottles.total_bottles || 0,
-        usedBottles: result.totalBottles.used_bottles || 0,
-        damagedBottles: result.totalBottles.damaged_bottles || 0,
         expenses: expenses || 0,
       };
     } catch (error) {

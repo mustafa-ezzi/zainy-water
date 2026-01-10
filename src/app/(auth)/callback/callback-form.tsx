@@ -52,37 +52,33 @@ export function CallbackForm() {
   const [requested, setRequested] = useState(false);
   const [checkingUser, setCheckingUser] = useState(true);
 
-  // Check if user email exists in database
+
   useEffect(() => {
-    async function checkUserExists() {
-      if (!isLoaded || !isSignedIn || !user?.primaryEmailAddress?.emailAddress) {
-        setCheckingUser(false);
-        return;
-      }
+    if (!isLoaded || !isSignedIn || !user) return;
 
-      try {
-        setCheckingUser(true);
-        // Replace this with your actual API call to check if user exists
-        const userExists = await client.auth.checkUserExists({
-          email: user.primaryEmailAddress.emailAddress,
-        });
-
-        if (userExists.exists) {
-          // User exists, redirect to password/login page
-          router.push("/password"); // or "/login" or wherever your password page is
-        } else {
-          // User doesn't exist, stay on license page
-          setCheckingUser(false);
-        }
-      } catch (error) {
-        console.error("Error checking user existence:", error);
-        // On error, stay on current page to allow manual action
-        setCheckingUser(false);
-      }
+    const email = user.primaryEmailAddress?.emailAddress;
+    if (!email) {
+      setCheckingUser(false);
+      return;
     }
 
-    checkUserExists();
+    const checkUser = async () => {
+      try {
+        const res = await client.auth.checkUserExists({ email });
+
+        if (res.exists) {
+          router.replace("/password"); // existing user
+        }
+      } catch (err) {
+        console.error("User check failed:", err);
+      } finally {
+        setCheckingUser(false);
+      }
+    };
+
+    checkUser();
   }, [isLoaded, isSignedIn, user, router]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setSubmitting(true);
@@ -122,7 +118,7 @@ export function CallbackForm() {
     }),
   );
 
-  // Show loading state while checking authentication and user existence
+
   if (!isLoaded || checkingUser) {
     return (
       <Card className="w-full max-w-sm">
@@ -136,8 +132,8 @@ export function CallbackForm() {
 
   if (!isSignedIn) {
     toast.error("You are currently not signed-in.");
-    // Optionally redirect to sign-in page
-    // router.push("/sign-in");
+
+
     return null;
   }
 

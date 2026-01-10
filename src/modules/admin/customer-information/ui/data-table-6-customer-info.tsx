@@ -438,7 +438,7 @@ export function DataTable6CustomerInformation({
       return [
         `"${Customer.name.replace(/"/g, '""')}"`,
         `"${Customer.customer_id}"`,
-        `"${Customer.phone}"`,
+        `="${Customer.phone}"`, // ✅ Excel-safe phone
         `"${status}"`,
         `"${balance}"`,
         `"${Customer.bottles}"`,
@@ -451,7 +451,10 @@ export function DataTable6CustomerInformation({
 
     const csvContent = [csvColumns.join(","), ...rows].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -466,140 +469,140 @@ export function DataTable6CustomerInformation({
     <div className={""}>
       <div className="w-full flex items-center justify-between gap-4 px-4 pb-4 lg:px-6">
         <div className="flex flex-col gap-3 px-4 pb-4 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-  {/* LEFT */}
-  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-    <Input
-      placeholder="Search Name / ID / Area..."
-      value={globalFilter ?? ""}
-      onChange={(e) => setGlobalFilter(e.target.value)}
-      className="w-full sm:w-[260px]"
-    />
+          {/* LEFT */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Input
+              placeholder="Search Name / ID / Area..."
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-full sm:w-[260px]"
+            />
 
-    <div className="flex flex-wrap items-center gap-2">
-      <Input
-        type="date"
-        value={fromDate ?? ""}
-        onChange={(e) => setFromDate(e.target.value || null)}
-        className="w-full sm:w-[150px]"
-      />
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                type="date"
+                value={fromDate ?? ""}
+                onChange={(e) => setFromDate(e.target.value || null)}
+                className="w-full sm:w-[150px]"
+              />
 
-      <span className="hidden sm:inline text-muted-foreground text-sm">
-        to
-      </span>
+              <span className="hidden sm:inline text-muted-foreground text-sm">
+                to
+              </span>
 
-      <Input
-        type="date"
-        value={toDate ?? ""}
-        onChange={(e) => setToDate(e.target.value || null)}
-        className="w-full sm:w-[150px]"
-      />
+              <Input
+                type="date"
+                value={toDate ?? ""}
+                onChange={(e) => setToDate(e.target.value || null)}
+                className="w-full sm:w-[150px]"
+              />
 
-      {(fromDate || toDate) && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setFromDate(null);
-            setToDate(null);
-          }}
-        >
-          Clear
-        </Button>
-      )}
-    </div>
+              {(fromDate || toDate) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setFromDate(null);
+                    setToDate(null);
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
 
-    <Button
-      variant="outline"
-      size="sm"
-      className="w-full sm:w-auto"
-      onClick={downloadCSV}
-    >
-      Download CSV
-    </Button>
-  </div>
-
-  {/* RIGHT */}
-  <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
-    <div className="text-sm font-medium text-muted-foreground">
-      Page {table.getState().pagination.pageIndex + 1} of{" "}
-      {table.getPageCount()}
-    </div>
-
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => table.setPageIndex(0)}
-        disabled={!table.getCanPreviousPage()}
-        className="hidden lg:flex"
-      >
-        <IconChevronsLeft />
-      </Button>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
-      >
-        <IconChevronLeft />
-      </Button>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
-      >
-        <IconChevronRight />
-      </Button>
-
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-        disabled={!table.getCanNextPage()}
-        className="hidden lg:flex"
-      >
-        <IconChevronsRight />
-      </Button>
-    </div>
-
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <IconLayoutColumns className="size-4" />
-          <span className="hidden sm:inline">Columns</span>
-          <IconChevronDown className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align="end" className="w-56">
-        {table
-          .getAllColumns()
-          .filter(
-            (column) =>
-              typeof column.accessorFn !== "undefined" &&
-              column.getCanHide()
-          )
-          .map((column) => (
-            <DropdownMenuCheckboxItem
-              key={column.id}
-              checked={column.getIsVisible()}
-              onCheckedChange={(value) =>
-                column.toggleVisibility(!!value)
-              }
-              className="capitalize"
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={downloadCSV}
             >
-              {column.id}
-            </DropdownMenuCheckboxItem>
-          ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </div>
-</div>
-</div>
+              Download CSV
+            </Button>
+          </div>
+
+          {/* RIGHT */}
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+            <div className="text-sm font-medium text-muted-foreground">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                className="hidden lg:flex"
+              >
+                <IconChevronsLeft />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <IconChevronLeft />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                <IconChevronRight />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                className="hidden lg:flex"
+              >
+                <IconChevronsRight />
+              </Button>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <IconLayoutColumns className="size-4" />
+                  <span className="hidden sm:inline">Columns</span>
+                  <IconChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      typeof column.accessorFn !== "undefined" &&
+                      column.getCanHide()
+                  )
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                      className="capitalize"
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
       <div className="overflow-hidden rounded-lg">
         <DndContext
           collisionDetection={closestCenter}

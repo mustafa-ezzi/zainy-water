@@ -286,34 +286,18 @@ export const BottleUsageForm = () => {
                         />
                       </PopoverContent>
                     </Popover>
-                    {!(field.value < startOfDay(new Date())) ? (
-                      <Button
-                        type="button"
-                        size={"icon"}
-                        variant={"outline"}
-                        onClick={() =>
-                          handleDeleteBottleUsage(form.getValues("dob"))
-                        }
-                      >
-                        <Trash className="size-4 text-rose-500" />
-                      </Button>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger type="button">
-                          <Button
-                            type="button"
-                            size={"icon"}
-                            variant={"outline"}
-                            disabled
-                          >
-                            <Trash className="size-4 text-rose-500" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cannot delete past records</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+
+                    <Button
+                      type="button"
+                      size={"icon"}
+                      variant={"outline"}
+                      onClick={() =>
+                        handleDeleteBottleUsage(form.getValues("dob"))
+                      }
+                    >
+                      <Trash className="size-4 text-rose-500" />
+                    </Button>
+
                   </div>
                   <FormMessage />
                 </FormItem>
