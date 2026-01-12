@@ -52,16 +52,16 @@ export const addMiscDelivery = os
         and(
           eq(BottleUsage.moderator_id, input.moderator_id),
           gte(
-            BottleUsage.createdAt,
+            BottleUsage.delivery_date,
             startOfDay(input.delivery_date)
           ),
           lte(
-            BottleUsage.createdAt,
+            BottleUsage.delivery_date,
             endOfDay(input.delivery_date)
           )
         )
       )
-      .orderBy(desc(BottleUsage.createdAt))
+      .orderBy(desc(BottleUsage.delivery_date))
       .limit(1);
 
     if (!bottleUsage) {
