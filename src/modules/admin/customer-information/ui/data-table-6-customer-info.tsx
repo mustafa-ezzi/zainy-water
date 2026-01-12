@@ -438,7 +438,7 @@ export function DataTable6CustomerInformation({
       return [
         `"${Customer.name.replace(/"/g, '""')}"`,
         `"${Customer.customer_id}"`,
-        `="${Customer.phone}"`, // ✅ Excel-safe phone
+        `="${Customer.phone}"`,
         `"${status}"`,
         `"${balance}"`,
         `"${Customer.bottles}"`,
