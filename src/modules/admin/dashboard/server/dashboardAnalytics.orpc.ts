@@ -2,7 +2,7 @@ import { adminProcedure } from "@/middlewares/admin-clerk";
 import { z } from "zod";
 import { subDays } from "date-fns";
 import { db } from "@/db";
-import { and, count, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte, sum } from "drizzle-orm";
 import {
   Customer,
   Delivery,
@@ -19,6 +19,7 @@ export const DashboardAnalyticsSchema = z.object({
   depositCount: z.number(),
   availableBottles: z.number(),
   totalBottles: z.number(),
+  depositBottles: z.number(),
   usedBottles: z.number(),
   damagedBottles: z.number(),
   expenses: z.number(),
@@ -32,98 +33,58 @@ export const dashboardAnalyticsOrpc = adminProcedure
     const from = subDays(now, 30);
 
     try {
-      const transaction = await db.transaction(async (tx) => {
-        return await Promise.all([
-          await tx.select({ total: count() }).from(Customer), // index [0] -> customerCount
+      const [customerRes, moderatorRes, deliveryRes, miscRes, depositRes, totalBottlesRes, expensesRes] =
+        await db.transaction(async (tx) => {
+          return await Promise.all([
+            tx.select({ total: count() }).from(Customer),
+            tx.select({ total: count() }).from(Moderator),
+            tx.select({ payment: Delivery.payment })
+              .from(Delivery)
+              .where(and(lte(Delivery.createdAt, now), gte(Delivery.createdAt, from))),
+            tx.select({ payment: Miscellaneous.payment })
+              .from(Miscellaneous)
+              .where(and(lte(Miscellaneous.createdAt, now), gte(Miscellaneous.createdAt, from))),
+            tx.select({ deposit: Customer.deposit }).from(Customer).where(eq(Customer.isActive, true)),
+            tx.select().from(TotalBottles).orderBy(desc(TotalBottles.createdAt)).limit(1),
+            tx.select({ amount: OtherExpense.amount })
+              .from(OtherExpense)
+              .where(and(lte(OtherExpense.createdAt, now), gte(OtherExpense.createdAt, from))),
+          ]);
+        });
 
-          await tx.select({ total: count() }).from(Moderator), // index [1] -> moderatorCount
+      // Calculate total revenue
+      const totalRevenue =
+        deliveryRes.reduce((acc, d) => acc + Number(d.payment || 0), 0) +
+        miscRes.reduce((acc, d) => acc + Number(d.payment || 0), 0);
 
-          await tx
-            .select({ payment: Delivery.payment })
-            .from(Delivery)
-            .where(
-              and(lte(Delivery.createdAt, now), gte(Delivery.createdAt, from))
-            ), // index [2] -> deliveries
+      // Deposit count
+      const depositCount = depositRes.reduce((acc, d) => acc + Number(d.deposit || 0), 0);
 
-          await tx
-            .select({ payment: Miscellaneous.payment })
-            .from(Miscellaneous)
-            .where(
-              and(
-                lte(Miscellaneous.createdAt, now),
-                gte(Miscellaneous.createdAt, from) // index [3] -> miscellaneousDeliveries
-              )
-            ),
+      // Expenses
+      const expenses = expensesRes.reduce((acc, e) => acc + Number(e.amount || 0), 0);
 
-          await tx
-            .select({ deposit: Customer.deposit })
-            .from(Customer)
-            .where(eq(Customer.isActive, true)), // index [4] -> deposit bottles
+      // Bottles calculations
+      const totalBottlesRow = totalBottlesRes[0] || null;
 
-          await tx
-            .select()
-            .from(TotalBottles)
-            .orderBy(desc(TotalBottles.createdAt))
-            .limit(1), // index [5] -> total bottles (latest entry)
+      const totalBottles = totalBottlesRow?.total_bottles || 0;
+      const usedBottles = totalBottlesRow?.used_bottles || 0;
+      const damagedBottles = totalBottlesRow?.damaged_bottles || 0;
+      const depositBottles = totalBottlesRow?.deposit_bottles || 0;
 
-          await tx
-            .select({ amount: OtherExpense.amount })
-            .from(OtherExpense)
-            .where(
-              and(
-                lte(OtherExpense.createdAt, now),
-                gte(OtherExpense.createdAt, from)
-              )
-            ), // index [6] -> other expenses
-        ]);
-      });
-
-      const result = {
-        customerCount: transaction[0][0],
-        moderatorCount: transaction[1][0],
-        deliveries: transaction[2],
-        miscellaneousDeliveries: transaction[3],
-        deposit: transaction[4],
-        totalBottles: transaction[5][0],
-        expenses: transaction[6],
-      };
-
-      const totalDelivery = result.deliveries
-        .map((delivery) => delivery.payment)
-        .reduce((a, b) => a + b, 0);
-
-      const totalMiscellaneous = result.miscellaneousDeliveries
-        .map((delivery) => delivery.payment)
-        .reduce((a, b) => a + b, 0);
-
-      const totalRevenue = totalDelivery + totalMiscellaneous;
-
-      const depositCount = result.deposit
-        .map((d) => Number(d.deposit) || 0)
-        .reduce((a, b) => a + b, 0);
-
-      const expenses = result.expenses
-        .map((e) => e.amount)
-        .reduce((a, b) => a + b, 0);
-
-      const totalBottles = result.totalBottles.total_bottles || 0;
-      const usedBottles = result.totalBottles.used_bottles || 0;
-      const damagedBottles = result.totalBottles.damaged_bottles || 0;
-
-      const availableBottles =
-        totalBottles - usedBottles - damagedBottles;
-
+      // Correct available bottles calculation
+      const availableBottles = Math.max(totalBottles - usedBottles - damagedBottles - depositBottles, 0);
 
       return {
+        customerCount: customerRes[0]?.total || 0,
+        moderatorCount: moderatorRes[0]?.total || 0,
         totalRevenue,
-        customerCount: result.customerCount.total || 0,
-        moderatorCount: result.moderatorCount.total || 0,
-        availableBottles,
+        depositCount,
+        expenses,
         totalBottles,
         usedBottles,
         damagedBottles,
-        depositCount: depositCount || 0,
-        expenses: expenses || 0,
+        availableBottles,
+        depositBottles,
       };
     } catch (error) {
       console.error("Error fetching dashboard analytics:", error);

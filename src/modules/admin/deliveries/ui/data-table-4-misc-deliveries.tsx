@@ -158,7 +158,11 @@ const columns: ColumnDef<columnSchema>[] = [
     cell: ({ row }) => (
       <div className="w-full">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {format(row.original.Miscellaneous.createdAt, "PPPP")}
+          {format(
+            new Date(row.original.Miscellaneous.delivery_date ?? row.original.Miscellaneous.createdAt),
+            "PPPP"
+          )}
+
         </Badge>
       </div>
     ),
@@ -169,7 +173,10 @@ const columns: ColumnDef<columnSchema>[] = [
     cell: ({ row }) => (
       <Badge variant="outline" className="text-muted-foreground px-1.5 w-full">
         {startOfDay(new Date()) >
-          startOfDay(row.original.Miscellaneous.createdAt) ? (
+          startOfDay(
+            new Date(row.original.Miscellaneous.delivery_date ?? row.original.Miscellaneous.createdAt)
+          ) ? (
+
           <>
             <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />{" "}
             Done
@@ -340,7 +347,10 @@ export function DataTable4MiscDeliveries({
     const to = toDate ? startOfDay(new Date(toDate)) : null;
 
     return tableData.filter(({ Miscellaneous }) => {
-      const rowDate = startOfDay(new Date(Miscellaneous.createdAt));
+      const rowDate = startOfDay(
+        new Date(Miscellaneous.delivery_date ?? Miscellaneous.createdAt)
+      );
+
 
       if (from && to) return rowDate >= from && rowDate <= to;
       if (from) return rowDate >= from;

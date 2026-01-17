@@ -3,9 +3,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { BottleUsage, TotalBottles } from "@/db/schema";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import { endOfDay, startOfDay, addHours, subDays } from "date-fns";
-import { format } from "date-fns";
-import { TIME_OFFSET } from "@/lib/utils";
+import { endOfDay } from "date-fns";
 
 export const addUpdateBottleUsage = os
   .input(
@@ -24,103 +22,89 @@ export const addUpdateBottleUsage = os
     },
     BAD_REQUEST: {
       status: 400,
-      message: "Filled_bottles cannot exceed total available bottles",
+      message: "Filled bottles cannot exceed total available bottles",
     },
   })
   .handler(async ({ input, errors }) => {
-    if (!input.dob) {
-      throw new ORPCError("BAD_REQUEST: DOB is not provided");
-    }
+    if (!input.dob) throw new ORPCError("BAD_REQUEST: DOB is not provided");
 
     const from = input.dob;
     const to = endOfDay(input.dob);
 
-    const [total_bottles] = await db
+    // 1️⃣ Get latest TotalBottles
+    const [totalBottles] = await db
       .select()
       .from(TotalBottles)
       .orderBy(desc(TotalBottles.createdAt))
       .limit(1);
 
-    if (!total_bottles) {
-      throw errors.TOTAL_BOTTLES_404();
-    }
+    if (!totalBottles) throw errors.TOTAL_BOTTLES_404();
 
-    if (total_bottles.available_bottles < input.filled_bottles) {
+    if (totalBottles.available_bottles < input.filled_bottles) {
       throw errors.BAD_REQUEST();
     }
 
-    const [bottleUsage] = await db
+    // 2️⃣ Check if BottleUsage exists for this moderator/date
+    const [existingUsage] = await db
       .select()
       .from(BottleUsage)
-      .orderBy(desc(BottleUsage.createdAt))
       .where(
         and(
           eq(BottleUsage.moderator_id, input.moderator_id),
-          lte(BottleUsage.createdAt, to),
-          gte(BottleUsage.createdAt, from)
+          gte(BottleUsage.createdAt, from),
+          lte(BottleUsage.createdAt, to)
         )
       )
+      .orderBy(desc(BottleUsage.createdAt))
       .limit(1);
 
-    if (!bottleUsage) {
-      const [previousBottleUsage] = await db
-        .select()
-        .from(BottleUsage)
-        .where(eq(BottleUsage.moderator_id, input.moderator_id))
-        .orderBy(desc(BottleUsage.createdAt))
-        .limit(1);
-      // Attempt to create new bottle usage record
-      await db.transaction(async (tx) => {
-        await Promise.all([
-          tx.insert(BottleUsage).values({
-            moderator_id: input.moderator_id,
-            filled_bottles: input.filled_bottles,
-            empty_bottles: previousBottleUsage?.empty_bottles ?? 0,
-            remaining_bottles: (previousBottleUsage?.remaining_bottles ?? 0) + input.filled_bottles,
-            caps: input.caps,
-            createdAt: from,
-          }),
-          tx
-            .update(TotalBottles)
-            .set({
-              available_bottles:
-                total_bottles.available_bottles - input.filled_bottles,
-              used_bottles: total_bottles.used_bottles + input.filled_bottles,
-            })
-            .where(eq(TotalBottles.id, total_bottles.id)),
-        ]);
-      });
-
-      return { success: true };
-    }
-
-    if (bottleUsage?.done) {
-      throw new ORPCError(
-        `Bottle usage for ${format(input.dob, "PPP")} is already marked as done`
-      );
-    }
-
+    // 3️⃣ Transaction to update both tables atomically
     await db.transaction(async (tx) => {
-      await Promise.all([
-        tx
+      if (!existingUsage) {
+        // First entry for this day
+        const [previousUsage] = await tx
+          .select()
+          .from(BottleUsage)
+          .where(eq(BottleUsage.moderator_id, input.moderator_id))
+          .orderBy(desc(BottleUsage.createdAt))
+          .limit(1);
+
+        await tx.insert(BottleUsage).values({
+          moderator_id: input.moderator_id,
+          filled_bottles: input.filled_bottles,
+          caps: input.caps,
+          empty_bottles: previousUsage?.empty_bottles ?? 0,
+          remaining_bottles:
+            (previousUsage?.remaining_bottles ?? totalBottles.available_bottles) -
+            input.filled_bottles,
+          createdAt: from,
+        });
+      } else {
+        if (existingUsage.done) {
+          throw new ORPCError(
+            `Bottle usage for ${from.toDateString()} is already marked as done`
+          );
+        }
+
+        await tx
           .update(BottleUsage)
           .set({
-            filled_bottles: bottleUsage.filled_bottles + input.filled_bottles,
+            filled_bottles: existingUsage.filled_bottles + input.filled_bottles,
+            caps: existingUsage.caps + input.caps,
             remaining_bottles:
-              bottleUsage.remaining_bottles + input.filled_bottles,
-            caps: bottleUsage.caps + input.caps,
+              existingUsage.remaining_bottles - input.filled_bottles,
           })
-          .where(eq(BottleUsage.id, bottleUsage.id)),
+          .where(eq(BottleUsage.id, existingUsage.id));
+      }
 
-        tx
-          .update(TotalBottles)
-          .set({
-            available_bottles:
-              total_bottles.available_bottles - input.filled_bottles,
-            used_bottles: total_bottles.used_bottles + input.filled_bottles,
-          })
-          .where(eq(TotalBottles.id, total_bottles.id)),
-      ]);
+      // 4️⃣ Update TotalBottles
+      await tx
+        .update(TotalBottles)
+        .set({
+          available_bottles: totalBottles.available_bottles - input.filled_bottles,
+          used_bottles: totalBottles.used_bottles + input.filled_bottles,
+        })
+        .where(eq(TotalBottles.id, totalBottles.id));
     });
 
     return { success: true };

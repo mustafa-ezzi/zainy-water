@@ -52,16 +52,16 @@ export const addMiscDelivery = os
         and(
           eq(BottleUsage.moderator_id, input.moderator_id),
           gte(
-            BottleUsage.delivery_date,
+            BottleUsage.createdAt,
             startOfDay(input.delivery_date)
           ),
           lte(
-            BottleUsage.delivery_date,
+            BottleUsage.createdAt,
             endOfDay(input.delivery_date)
           )
         )
       )
-      .orderBy(desc(BottleUsage.delivery_date))
+      .orderBy(desc(BottleUsage.createdAt))
       .limit(1);
 
     if (!bottleUsage) {
@@ -84,7 +84,7 @@ export const addMiscDelivery = os
           damaged_bottles: input.damaged_bottles,
           payment: input.isPaid ? input.payment : 0,
           isPaid: input.isPaid,
-          delivery_date: input.delivery_date,
+          delivery_date: new Date(input.delivery_date),
         }),
 
         tx

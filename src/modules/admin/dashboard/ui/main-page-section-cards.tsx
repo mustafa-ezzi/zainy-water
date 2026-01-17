@@ -76,7 +76,7 @@ export function MainSectionCards({ data }: Props) {
     {
       id: "deposit",
       title: "Deposit Bottles",
-      value: data.depositCount,
+      value: data.depositBottles,
       href: "/admin/customer-information",
       description: "Total bottles given as deposit",
       footer: "All time record",
@@ -117,7 +117,7 @@ export function MainSectionCards({ data }: Props) {
           className={cn(
             "@container/card",
             card.id === "total_revenue" &&
-              (card.value < 0 ? "border-red-600/50" : "border-green-600/50"),
+            (card.value < 0 ? "border-red-600/50" : "border-green-600/50"),
             card.id === "expenses" && "border-yellow-600/50"
           )}
           key={card.id}
