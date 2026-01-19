@@ -1,11 +1,10 @@
 import { db } from "@/db";
 import { BottleUsage, TotalBottles } from "@/db/schema";
 import { ORPCError, os } from "@orpc/server";
-import { startOfDay, endOfDay, addHours } from "date-fns";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { startOfDay, endOfDay } from "date-fns";
+import { and, eq, gte, lte, desc } from "drizzle-orm";
 import z from "zod";
-import { TIME_OFFSET } from "@/lib/utils";
-
+  
 export const deleteBottleUsage = os
   .input(
     z.object({
@@ -15,19 +14,16 @@ export const deleteBottleUsage = os
   )
   .output(
     z.object({
-      totalBottles: z.object({
-        available_bottles: z.number(),
-        used_bottles: z.number(),
-      }),
+      success: z.boolean(),
+      totalBottles: z.custom<typeof TotalBottles.$inferSelect>(),
     })
   )
   .handler(async ({ input }) => {
-    const adjustedDob = addHours(new Date(input.dob), TIME_OFFSET);
-    const from = startOfDay(adjustedDob);
-    const to = endOfDay(adjustedDob);
+    const from = startOfDay(input.dob);
+    const to = endOfDay(input.dob);
 
     return await db.transaction(async (tx) => {
-      // 1️⃣ Find usage
+      // 1️⃣ Find usage for that day
       const usage = await tx.query.BottleUsage.findFirst({
         where: and(
           eq(BottleUsage.moderator_id, input.moderator_id),
@@ -45,24 +41,15 @@ export const deleteBottleUsage = os
       const rollbackAmount = usage.filled_bottles ?? 0;
 
       // 3️⃣ Rollback stock
-      const updatedTotal = await tx
-        .update(TotalBottles)
-        .set({
-          available_bottles: total.available_bottles + rollbackAmount,
-          used_bottles: Math.max(total.used_bottles - rollbackAmount, 0),
-          updatedAt: new Date(),
-        })
-        .where(eq(TotalBottles.id, total.id))
-        .returning();
+      const updatedTotal = await tx.update(TotalBottles).set({
+        available_bottles: total.available_bottles + rollbackAmount,
+        used_bottles: Math.max(total.used_bottles - rollbackAmount, 0),
+        updatedAt: new Date(),
+      }).where(eq(TotalBottles.id, total.id)).returning();
 
-      // 4️⃣ Delete the usage
+      // 4️⃣ Delete usage entry
       await tx.delete(BottleUsage).where(eq(BottleUsage.id, usage.id));
 
-      return {
-        totalBottles: {
-          available_bottles: updatedTotal[0].available_bottles,
-          used_bottles: updatedTotal[0].used_bottles,
-        },
-      };
+      return { success: true, totalBottles: updatedTotal[0] };
     });
   });

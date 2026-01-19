@@ -131,41 +131,46 @@ export const BottleUsageForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!moderator_id) {
-      toast.error("Moderator ID is not available");
-      return;
-    }
+    if (!moderator_id) return toast.error("Moderator ID is missing");
 
-    if (!totalBottlesQuery.data) {
-      return;
-    }
+    if (!totalBottlesQuery.data) return;
 
     if (values.filled_bottles > totalBottlesData.available_bottles) {
-      toast.error("Filled bottles cannot exceed available bottles");
-      return;
+      return toast.error("Filled bottles cannot exceed available bottles");
     }
 
     const data = {
-      moderator_id: moderator_id,
+      moderator_id,
       dob: values.dob,
       filled_bottles: values.filled_bottles,
       caps: values.caps,
     };
 
     try {
-      const response = await bottleUsageMutation.mutateAsync({ ...data });
-      console.log({ response });
-      // Reset only the filled_bottles and caps fields, keep the date
+      const response = await bottleUsageMutation.mutateAsync(data);
+
+      // ✅ Immediately update total bottles in cache
+      if (response?.totalBottles) {
+        queryClient.setQueryData(
+          orpc.util.getTotalBottles.queryKey({}),
+          { success: true, totalBottles: response.totalBottles }
+        );
+      }
+
+      // Reset the form fields except date
       form.reset({
-        dob: form.getValues("dob"), // Keep the current date
+        dob: form.getValues("dob"),
         filled_bottles: 0,
         caps: 0,
       });
-    } catch (error) {
-      alert("Failed to update bottle usage");
-      console.error({ error });
+
+      toast.success("Bottle usage added successfully");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.message || "Failed to add bottle usage");
     }
   }
+
 
   const doneMutation = useMutation(
     orpc.moderator.bottleUsage.markAsDone.mutationOptions({
@@ -195,13 +200,21 @@ export const BottleUsageForm = () => {
 
   const deleteMutation = useMutation(
     orpc.moderator.bottleUsage.deleteBottleUsage.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (data) => { 
         toast.success("Deleted successfully");
+
         await queryClient.invalidateQueries({
           queryKey: orpc.moderator.bottleUsage.getBottleUsage.queryKey({
             input: { id: moderator_id || "", date: form.getValues("dob") },
           }),
         });
+
+        if (data?.totalBottles) {
+          queryClient.setQueryData(
+            orpc.util.getTotalBottles.queryKey({}),
+            { success: true, totalBottles: data.totalBottles }
+          );
+        }
       },
       onError: (err) => {
         console.error("Failed to delete bottle usage", { err });
@@ -209,6 +222,9 @@ export const BottleUsageForm = () => {
       },
     })
   );
+
+
+
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure you want to delete this record?",

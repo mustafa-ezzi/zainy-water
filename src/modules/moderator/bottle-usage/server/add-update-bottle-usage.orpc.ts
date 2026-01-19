@@ -2,7 +2,7 @@ import { ORPCError, os } from "@orpc/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { BottleUsage, TotalBottles } from "@/db/schema";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { startOfDay, endOfDay } from "date-fns";
 
 export const addUpdateBottleUsage = os
@@ -17,10 +17,7 @@ export const addUpdateBottleUsage = os
   .output(
     z.object({
       success: z.boolean(),
-      totalBottles: z.object({
-        available_bottles: z.number(),
-        used_bottles: z.number(),
-      }),
+      totalBottles: z.custom<typeof TotalBottles.$inferSelect>(),
     })
   )
   .errors({
@@ -32,11 +29,11 @@ export const addUpdateBottleUsage = os
     const to = endOfDay(input.dob);
 
     return await db.transaction(async (tx) => {
-      // 1️⃣ Get Total Bottles
+      // 1️⃣ Get TotalBottles
       const [total] = await tx.select().from(TotalBottles).limit(1);
       if (!total) throw errors.BAD_REQUEST({ message: "TotalBottles not initialized" });
 
-      // 2️⃣ Get existing usage
+      // 2️⃣ Get existing usage for that day
       const [existing] = await tx
         .select()
         .from(BottleUsage)
@@ -51,8 +48,6 @@ export const addUpdateBottleUsage = os
 
       if (existing?.done) throw errors.ALREADY_DONE();
 
-      let actualRefill = input.filled_bottles;
-
       // -------------------------------
       // FIRST ENTRY OF THE DAY
       // -------------------------------
@@ -65,60 +60,57 @@ export const addUpdateBottleUsage = os
           moderator_id: input.moderator_id,
           filled_bottles: input.filled_bottles,
           remaining_bottles: input.filled_bottles,
+          empty_bottles: 0,
+          refilled_bottles: 0,
           caps: input.caps,
           createdAt: from,
         });
 
-      } else {
-        // -------------------------------
-        // REFILL FLOW
-        // -------------------------------
-        const totalCaps = existing.caps + input.caps;
-        const refillable = Math.min(existing.empty_bottles, totalCaps);
-        actualRefill = Math.min(refillable, input.filled_bottles);
+        // update TotalBottles
+        const updatedTotal = await tx
+          .update(TotalBottles)
+          .set({
+            available_bottles: total.available_bottles - input.filled_bottles,
+            used_bottles: total.used_bottles + input.filled_bottles,
+            updatedAt: new Date(),
+          })
+          .where(eq(TotalBottles.id, total.id))
+          .returning();
 
-        if (actualRefill <= 0) {
-          return {
-            success: true,
-            totalBottles: {
-              available_bottles: total.available_bottles,
-              used_bottles: total.used_bottles,
-            },
-          };
-        }
+        return { success: true, totalBottles: updatedTotal[0] };
+      }
 
+      // -------------------------------
+      // REFILL FLOW
+      // -------------------------------
+      const totalCaps = existing.caps + input.caps;
+      const refillable = Math.min(existing.empty_bottles, totalCaps);
+      const actualRefill = Math.min(refillable, input.filled_bottles);
+
+      if (actualRefill > 0) {
         if (total.available_bottles < actualRefill) {
-          throw errors.BAD_REQUEST({
-            message: "Not enough bottles in stock for refill",
-          });
+          throw errors.BAD_REQUEST({ message: "Not enough bottles in stock for refill" });
         }
 
         await tx.update(BottleUsage).set({
           caps: totalCaps - actualRefill,
           empty_bottles: existing.empty_bottles - actualRefill,
           remaining_bottles: existing.remaining_bottles + actualRefill,
-          refilled_bottles: existing.refilled_bottles + actualRefill,
+          refilled_bottles: (existing.refilled_bottles ?? 0) + actualRefill,
           updatedAt: new Date(),
         }).where(eq(BottleUsage.id, existing.id));
-      }
 
-      // 3️⃣ Update TotalBottles
-      const updatedTotal = await tx
-        .update(TotalBottles)
-        .set({
+        // update TotalBottles
+        const updatedTotal = await tx.update(TotalBottles).set({
           available_bottles: total.available_bottles - actualRefill,
           used_bottles: total.used_bottles + actualRefill,
           updatedAt: new Date(),
-        })
-        .where(eq(TotalBottles.id, total.id))
-        .returning();
+        }).where(eq(TotalBottles.id, total.id)).returning();
 
-      return {
-        success: true,
-        totalBottles: {
-          available_bottles: updatedTotal[0].available_bottles,
-          used_bottles: updatedTotal[0].used_bottles,
-        },
-      };
+        return { success: true, totalBottles: updatedTotal[0] };
+      }
+
+      // nothing to refill
+      return { success: true, totalBottles: total };
     });
   });
