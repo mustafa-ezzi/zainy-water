@@ -2,110 +2,123 @@ import { ORPCError, os } from "@orpc/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { BottleUsage, TotalBottles } from "@/db/schema";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
-import { endOfDay } from "date-fns";
+import { and, eq, gte, lte } from "drizzle-orm";
+import { startOfDay, endOfDay } from "date-fns";
 
 export const addUpdateBottleUsage = os
   .input(
     z.object({
       moderator_id: z.string(),
-      dob: z.date().nullable(),
-      filled_bottles: z.number(),
-      caps: z.number(),
+      dob: z.date(),
+      filled_bottles: z.number().min(0),
+      caps: z.number().min(0),
     })
   )
-  .output(z.object({ success: z.boolean() }))
+  .output(
+    z.object({
+      success: z.boolean(),
+      totalBottles: z.object({
+        available_bottles: z.number(),
+        used_bottles: z.number(),
+      }),
+    })
+  )
   .errors({
-    TOTAL_BOTTLES_404: {
-      status: 404,
-      message: "Total bottles record not found",
-    },
-    BAD_REQUEST: {
-      status: 400,
-      message: "Filled bottles cannot exceed total available bottles",
-    },
+    BAD_REQUEST: { status: 400, message: "Invalid operation" },
+    ALREADY_DONE: { status: 400, message: "This day is already marked as done" },
   })
   .handler(async ({ input, errors }) => {
-    if (!input.dob) throw new ORPCError("BAD_REQUEST: DOB is not provided");
-
-    const from = input.dob;
+    const from = startOfDay(input.dob);
     const to = endOfDay(input.dob);
 
-    // 1️⃣ Get latest TotalBottles
-    const [totalBottles] = await db
-      .select()
-      .from(TotalBottles)
-      .orderBy(desc(TotalBottles.createdAt))
-      .limit(1);
+    return await db.transaction(async (tx) => {
+      // 1️⃣ Get Total Bottles
+      const [total] = await tx.select().from(TotalBottles).limit(1);
+      if (!total) throw errors.BAD_REQUEST({ message: "TotalBottles not initialized" });
 
-    if (!totalBottles) throw errors.TOTAL_BOTTLES_404();
-
-    if (totalBottles.available_bottles < input.filled_bottles) {
-      throw errors.BAD_REQUEST();
-    }
-
-    // 2️⃣ Check if BottleUsage exists for this moderator/date
-    const [existingUsage] = await db
-      .select()
-      .from(BottleUsage)
-      .where(
-        and(
-          eq(BottleUsage.moderator_id, input.moderator_id),
-          gte(BottleUsage.createdAt, from),
-          lte(BottleUsage.createdAt, to)
+      // 2️⃣ Get existing usage
+      const [existing] = await tx
+        .select()
+        .from(BottleUsage)
+        .where(
+          and(
+            eq(BottleUsage.moderator_id, input.moderator_id),
+            gte(BottleUsage.createdAt, from),
+            lte(BottleUsage.createdAt, to)
+          )
         )
-      )
-      .orderBy(desc(BottleUsage.createdAt))
-      .limit(1);
+        .limit(1);
 
-    // 3️⃣ Transaction to update both tables atomically
-    await db.transaction(async (tx) => {
-      if (!existingUsage) {
-        // First entry for this day
-        const [previousUsage] = await tx
-          .select()
-          .from(BottleUsage)
-          .where(eq(BottleUsage.moderator_id, input.moderator_id))
-          .orderBy(desc(BottleUsage.createdAt))
-          .limit(1);
+      if (existing?.done) throw errors.ALREADY_DONE();
+
+      let actualRefill = input.filled_bottles;
+
+      // -------------------------------
+      // FIRST ENTRY OF THE DAY
+      // -------------------------------
+      if (!existing) {
+        if (total.available_bottles < input.filled_bottles) {
+          throw errors.BAD_REQUEST({ message: "Not enough bottles in stock" });
+        }
 
         await tx.insert(BottleUsage).values({
           moderator_id: input.moderator_id,
           filled_bottles: input.filled_bottles,
+          remaining_bottles: input.filled_bottles,
           caps: input.caps,
-          empty_bottles: previousUsage?.empty_bottles ?? 0,
-          remaining_bottles:
-            (previousUsage?.remaining_bottles ?? totalBottles.available_bottles) -
-            input.filled_bottles,
           createdAt: from,
         });
+
       } else {
-        if (existingUsage.done) {
-          throw new ORPCError(
-            `Bottle usage for ${from.toDateString()} is already marked as done`
-          );
+        // -------------------------------
+        // REFILL FLOW
+        // -------------------------------
+        const totalCaps = existing.caps + input.caps;
+        const refillable = Math.min(existing.empty_bottles, totalCaps);
+        actualRefill = Math.min(refillable, input.filled_bottles);
+
+        if (actualRefill <= 0) {
+          return {
+            success: true,
+            totalBottles: {
+              available_bottles: total.available_bottles,
+              used_bottles: total.used_bottles,
+            },
+          };
         }
 
-        await tx
-          .update(BottleUsage)
-          .set({
-            filled_bottles: existingUsage.filled_bottles + input.filled_bottles,
-            caps: existingUsage.caps + input.caps,
-            remaining_bottles:
-              existingUsage.remaining_bottles - input.filled_bottles,
-          })
-          .where(eq(BottleUsage.id, existingUsage.id));
+        if (total.available_bottles < actualRefill) {
+          throw errors.BAD_REQUEST({
+            message: "Not enough bottles in stock for refill",
+          });
+        }
+
+        await tx.update(BottleUsage).set({
+          caps: totalCaps - actualRefill,
+          empty_bottles: existing.empty_bottles - actualRefill,
+          remaining_bottles: existing.remaining_bottles + actualRefill,
+          refilled_bottles: existing.refilled_bottles + actualRefill,
+          updatedAt: new Date(),
+        }).where(eq(BottleUsage.id, existing.id));
       }
 
-      // 4️⃣ Update TotalBottles
-      await tx
+      // 3️⃣ Update TotalBottles
+      const updatedTotal = await tx
         .update(TotalBottles)
         .set({
-          available_bottles: totalBottles.available_bottles - input.filled_bottles,
-          used_bottles: totalBottles.used_bottles + input.filled_bottles,
+          available_bottles: total.available_bottles - actualRefill,
+          used_bottles: total.used_bottles + actualRefill,
+          updatedAt: new Date(),
         })
-        .where(eq(TotalBottles.id, totalBottles.id));
-    });
+        .where(eq(TotalBottles.id, total.id))
+        .returning();
 
-    return { success: true };
+      return {
+        success: true,
+        totalBottles: {
+          available_bottles: updatedTotal[0].available_bottles,
+          used_bottles: updatedTotal[0].used_bottles,
+        },
+      };
+    });
   });

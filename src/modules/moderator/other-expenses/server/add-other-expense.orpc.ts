@@ -58,6 +58,7 @@ export const addOtherExpense = os
             .insert(BottleUsage)
             .values({
               moderator_id: input.moderator_id,
+              filled_bottles: 0,
               empty_bottles: latestUsage?.empty_bottles ?? 0,
               remaining_bottles: latestUsage?.remaining_bottles ?? 0,
               caps: latestUsage?.caps ?? 0,
@@ -65,6 +66,7 @@ export const addOtherExpense = os
               createdAt: input.date,
             })
             .returning();
+
 
           usage = inserted;
         }

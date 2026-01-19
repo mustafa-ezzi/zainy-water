@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { BottleUsage, TotalBottles } from "@/db/schema";
 import { ORPCError, os } from "@orpc/server";
 import { startOfDay, endOfDay, addHours } from "date-fns";
-import { and, eq, gte, lte, desc } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import z from "zod";
 import { TIME_OFFSET } from "@/lib/utils";
 
@@ -13,14 +13,21 @@ export const deleteBottleUsage = os
       moderator_id: z.string(),
     })
   )
-  .output(z.void())
+  .output(
+    z.object({
+      totalBottles: z.object({
+        available_bottles: z.number(),
+        used_bottles: z.number(),
+      }),
+    })
+  )
   .handler(async ({ input }) => {
     const adjustedDob = addHours(new Date(input.dob), TIME_OFFSET);
     const from = startOfDay(adjustedDob);
     const to = endOfDay(adjustedDob);
 
-    await db.transaction(async (tx) => {
-      // 1️⃣ Find the usage record for that moderator/date
+    return await db.transaction(async (tx) => {
+      // 1️⃣ Find usage
       const usage = await tx.query.BottleUsage.findFirst({
         where: and(
           eq(BottleUsage.moderator_id, input.moderator_id),
@@ -29,39 +36,33 @@ export const deleteBottleUsage = os
         ),
       });
 
-      if (!usage) {
-        throw new ORPCError("Bottle usage record not found for this date");
-      }
+      if (!usage) throw new ORPCError("Bottle usage record not found for this date");
 
-      // 2️⃣ Delete the usage
+      // 2️⃣ Get TotalBottles
+      const [total] = await tx.select().from(TotalBottles).limit(1);
+      if (!total) throw new ORPCError("Total bottles record not found");
+
+      const rollbackAmount = usage.filled_bottles ?? 0;
+
+      // 3️⃣ Rollback stock
+      const updatedTotal = await tx
+        .update(TotalBottles)
+        .set({
+          available_bottles: total.available_bottles + rollbackAmount,
+          used_bottles: Math.max(total.used_bottles - rollbackAmount, 0),
+          updatedAt: new Date(),
+        })
+        .where(eq(TotalBottles.id, total.id))
+        .returning();
+
+      // 4️⃣ Delete the usage
       await tx.delete(BottleUsage).where(eq(BottleUsage.id, usage.id));
 
-      // 3️⃣ Get latest TotalBottles
-      const [latestTotal] = await tx
-        .select()
-        .from(TotalBottles)
-        .orderBy(desc(TotalBottles.createdAt))
-        .limit(1);
-
-      if (!latestTotal) {
-        throw new ORPCError("Total bottles record not found");
-      }
-
-      // 4️⃣ Recalculate totals from all remaining BottleUsage records
-      const allUsage = await tx.select().from(BottleUsage);
-
-      const usedBottles = allUsage.reduce((acc, u) => acc + (u.filled_bottles ?? 0), 0);
-      const damagedBottles = latestTotal.damaged_bottles;
-      const depositBottles = latestTotal.deposit_bottles;
-      const totalBottles = latestTotal.total_bottles;
-
-      // 5️⃣ Correct calculation of available bottles
-      const availableBottles = totalBottles - depositBottles - damagedBottles - usedBottles;
-
-      // 6️⃣ Update TotalBottles
-      await tx.update(TotalBottles).set({
-        available_bottles: availableBottles,
-        used_bottles: usedBottles,
-      }).where(eq(TotalBottles.id, latestTotal.id));
+      return {
+        totalBottles: {
+          available_bottles: updatedTotal[0].available_bottles,
+          used_bottles: updatedTotal[0].used_bottles,
+        },
+      };
     });
   });
