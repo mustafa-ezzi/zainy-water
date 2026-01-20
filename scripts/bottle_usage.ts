@@ -154,10 +154,8 @@ async function main() {
     }
 
     console.log(
-      `🔄 Processing ${seedData.length} bottle usage records (${
-        seedData[0].createdAt.toISOString().split("T")[0]
-      } to ${
-        seedData[seedData.length - 1].createdAt.toISOString().split("T")[0]
+      `🔄 Processing ${seedData.length} bottle usage records (${seedData[0].createdAt.toISOString().split("T")[0]
+      } to ${seedData[seedData.length - 1].createdAt.toISOString().split("T")[0]
       })...`
     );
 

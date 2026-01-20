@@ -105,8 +105,7 @@ export const getBottleUsage = os
       // Re-throw the error so React Query can handle it properly
       // This allows you to distinguish between errors and null data in your UI
       throw new ORPCError(
-        `Failed to fetch bottle usage for moderator ${input.id}: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to fetch bottle usage for moderator ${input.id}: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }

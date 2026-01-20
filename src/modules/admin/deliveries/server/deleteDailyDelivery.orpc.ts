@@ -96,7 +96,7 @@ export const deleteDailyDelivery = adminProcedure
                 data.Customer.balance +
                 data.Delivery.payment -
                 (data.Delivery.filled_bottles - data.Delivery.foc) *
-                  data.Customer.bottle_price,
+                data.Customer.bottle_price,
             })
             .where(eq(Customer.id, data.Customer.id)),
 

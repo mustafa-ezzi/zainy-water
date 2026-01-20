@@ -123,7 +123,7 @@ export function BottleInventorySectionCards({ total_bottles }: Props) {
   const handleEdit = async (card_id: string) => {
     if (
       totalBottlesData[
-        card_id as keyof z.infer<typeof TotalBottlesDataSchema>
+      card_id as keyof z.infer<typeof TotalBottlesDataSchema>
       ]! < 0
     ) {
       setTotalBottlesData({ [card_id]: 0 });
@@ -151,7 +151,7 @@ export function BottleInventorySectionCards({ total_bottles }: Props) {
                   min={0}
                   value={
                     totalBottlesData[
-                      card.id as keyof z.infer<typeof TotalBottlesDataSchema>
+                    card.id as keyof z.infer<typeof TotalBottlesDataSchema>
                     ] || ""
                   }
                   onChange={(e) =>

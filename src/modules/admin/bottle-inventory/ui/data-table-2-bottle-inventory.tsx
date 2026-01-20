@@ -235,32 +235,32 @@ const columns: ColumnDef<columnSchema>[] = [
     ),
   },
   {
-  accessorKey: "returned_bottles",
-  header: () => <div className="w-full text-center">Returned</div>,
-  cell: ({ row }) => (
-    <div className="w-full text-right">
-      {row.original.bottleUsage.returned_bottles}
-    </div>
-  ),
-},
-{
-  accessorKey: "empty_returned",
-  header: () => <div className="w-full text-center">Empty Returned</div>,
-  cell: ({ row }) => (
-    <div className="w-full text-right">
-      {row.original.bottleUsage.empty_returned}
-    </div>
-  ),
-},
-{
-  accessorKey: "remaining_returned",
-  header: () => <div className="w-full text-center">Remaining Returned</div>,
-  cell: ({ row }) => (
-    <div className="w-full text-right">
-      {row.original.bottleUsage.remaining_returned}
-    </div>
-  ),
-},
+    accessorKey: "returned_bottles",
+    header: () => <div className="w-full text-center">Returned</div>,
+    cell: ({ row }) => (
+      <div className="w-full text-right">
+        {row.original.bottleUsage.returned_bottles}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "empty_returned",
+    header: () => <div className="w-full text-center">Empty Returned</div>,
+    cell: ({ row }) => (
+      <div className="w-full text-right">
+        {row.original.bottleUsage.empty_returned}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "remaining_returned",
+    header: () => <div className="w-full text-center">Remaining Returned</div>,
+    cell: ({ row }) => (
+      <div className="w-full text-right">
+        {row.original.bottleUsage.remaining_returned}
+      </div>
+    ),
+  },
 
   {
     accessorKey: "damaged_bottles",
@@ -563,8 +563,8 @@ export function DataTable2BottleInventory({
           Reset Filters
         </Button>
         <Button variant="outline" size="sm" onClick={downloadCSV}>
-  Download CSV
-</Button>
+          Download CSV
+        </Button>
 
         <div className="flex items-center gap-4">
           <div className="flex w-fit items-center justify-center text-sm font-medium">

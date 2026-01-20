@@ -200,7 +200,7 @@ export const BottleUsageForm = () => {
 
   const deleteMutation = useMutation(
     orpc.moderator.bottleUsage.deleteBottleUsage.mutationOptions({
-      onSuccess: async (data) => { 
+      onSuccess: async (data) => {
         toast.success("Deleted successfully");
 
         await queryClient.invalidateQueries({

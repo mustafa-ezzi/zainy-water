@@ -29,7 +29,7 @@ export const updateTotalBottles = adminProcedure
     if (!latestTotalBottles) {
       if (
         (totalBottlesData.available_bottles || 0) +
-          (totalBottlesData.used_bottles || 0) >
+        (totalBottlesData.used_bottles || 0) >
         (totalBottlesData.total_bottles || 0)
       ) {
         return {

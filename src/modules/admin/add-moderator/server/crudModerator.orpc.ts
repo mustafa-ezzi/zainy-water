@@ -81,8 +81,7 @@ export const deleteModerator = adminProcedure
     } catch (error) {
       console.error(`Error deleting moderator: ${input.name}:`, error);
       throw new Error(
-        `Failed to delete moderator: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to delete moderator: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }

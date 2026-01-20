@@ -152,7 +152,7 @@ const columns: ColumnDef<columnSchema>[] = [
       <Badge variant="outline" className="text-muted-foreground px-1.5">
         {startOfDay(new Date()) >
           startOfDay(row.original.bottleUsage.createdAt) ||
-        row.original.bottleUsage.done ? (
+          row.original.bottleUsage.done ? (
           <>
             <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />{" "}
             Done
@@ -527,9 +527,9 @@ export function DataTable2_1ResettedBottleUsage({
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                       </TableHead>
                     );
                   })}

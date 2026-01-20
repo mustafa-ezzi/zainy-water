@@ -118,8 +118,8 @@ export const editBottleUsage = adminProcedure
             ),
             available_bottles: Math.max(
               total_bottles.available_bottles -
-                valueDiffs.filled -
-                valueDiffs.damaged,
+              valueDiffs.filled -
+              valueDiffs.damaged,
               0
             ),
           })

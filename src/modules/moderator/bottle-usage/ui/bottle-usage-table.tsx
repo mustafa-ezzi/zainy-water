@@ -13,22 +13,22 @@ import { Loader2 } from "lucide-react";
 type Props = {
   totalBottlesQuery: UseQueryResult<
     | {
-        success: true;
-        totalBottles: {
-          damaged_bottles: number;
-          id: string;
-          createdAt: Date;
-          updatedAt: Date;
-          total_bottles: number;
-          available_bottles: number;
-          used_bottles: number;
-          deposit_bottles: number;
-        };
-      }
+      success: true;
+      totalBottles: {
+        damaged_bottles: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        total_bottles: number;
+        available_bottles: number;
+        used_bottles: number;
+        deposit_bottles: number;
+      };
+    }
     | {
-        success: false;
-        error: string;
-      },
+      success: false;
+      error: string;
+    },
     Error
   >;
   bottleUsageQuery: UseQueryResult<
