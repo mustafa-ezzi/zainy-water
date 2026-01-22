@@ -189,7 +189,17 @@ export function BottleInventoryTableCellViewer({
           </DrawerTitle>
           <DrawerDescription>
             <div>Showing bottle usage for {item.moderator.name}</div>
-            <div>Date: {format(item.bottleUsage.createdAt, "PPP")}</div>
+<div>
+  Date:{" "}
+  {format(
+    new Date(
+      new Date(item.bottleUsage.createdAt).setDate(
+        new Date(item.bottleUsage.createdAt).getDate() + 1
+      )
+    ),
+    "PPP"
+  )}
+</div>
           </DrawerDescription>
         </DrawerHeader>
 

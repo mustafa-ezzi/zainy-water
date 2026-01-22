@@ -114,9 +114,11 @@ export type columnSchema = {
 
 
 function normalizeDate(date: Date | string) {
-  const d = new Date(date);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return new Date(
+    new Date(date).toLocaleString("en-US", { timeZone: "Asia/Karachi" })
+  );
 }
+
 
 
 const columns: ColumnDef<columnSchema>[] = [
