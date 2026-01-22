@@ -114,9 +114,9 @@ export type columnSchema = {
 
 
 function normalizeDate(date: Date | string) {
-  return new Date(
-    new Date(date).toLocaleString("en-US", { timeZone: "Asia/Karachi" })
-  );
+  const d = new Date(date);
+  d.setDate(d.getDate() + 1); // 👈 add one day
+  return d;
 }
 
 
