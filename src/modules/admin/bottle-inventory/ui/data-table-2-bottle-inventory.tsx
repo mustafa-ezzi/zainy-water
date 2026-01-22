@@ -113,6 +113,10 @@ export type columnSchema = {
 
 
 
+function normalizeDate(date: Date | string) {
+  const d = new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
 
 
 const columns: ColumnDef<columnSchema>[] = [
@@ -144,7 +148,8 @@ const columns: ColumnDef<columnSchema>[] = [
     cell: ({ row }) => (
       <div className="w-full">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {format(row.original.bottleUsage.createdAt, "PPPP")}
+          {format(normalizeDate(row.original.bottleUsage.createdAt), "PPPP")
+          }
         </Badge>
       </div>
     ),
@@ -154,8 +159,8 @@ const columns: ColumnDef<columnSchema>[] = [
     header: "Status",
     cell: ({ row }) => (
       <Badge variant="outline" className="text-muted-foreground px-1.5">
-        {startOfDay(new Date()) >
-          startOfDay(row.original.bottleUsage.createdAt) ||
+        {startOfDay(new Date()) > startOfDay(normalizeDate(row.original.bottleUsage.createdAt))
+          ||
           row.original.bottleUsage.done ? (
           <>
             <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />{" "}
@@ -295,12 +300,12 @@ const columns: ColumnDef<columnSchema>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "actions",
-    header: "",
-    cell: ({ row }) => <ActionButton row={row} isDelete={false} />,
-    enableHiding: false,
-  },
+  // {
+  //   accessorKey: "actions",
+  //   header: "",
+  //   cell: ({ row }) => <ActionButton row={row} isDelete={false} />,
+  //   enableHiding: false,
+  // },
 ];
 
 function DraggableRow({ row }: { row: Row<columnSchema> }) {
@@ -377,7 +382,7 @@ export function DataTable2BottleInventory({
     const to = toDate ? startOfDay(new Date(toDate)) : null;
 
     return data.filter(({ bottleUsage }) => {
-      const rowDate = startOfDay(new Date(bottleUsage.createdAt));
+      const rowDate = startOfDay(normalizeDate(bottleUsage.createdAt));
 
       if (from && to) {
         return rowDate >= from && rowDate <= to;
@@ -488,7 +493,8 @@ export function DataTable2BottleInventory({
 
       return [
         `"${moderator.name.replace(/"/g, '""')}"`,
-        `"${format(new Date(bottleUsage.createdAt), "PPPP")}"`,
+        `"${format(normalizeDate(bottleUsage.createdAt), "PPPP")
+        }"`,
         `"${status}"`,
         `"${bottleUsage.revenue ?? ""}"`,
         `"${bottleUsage.expense ?? ""}"`,
