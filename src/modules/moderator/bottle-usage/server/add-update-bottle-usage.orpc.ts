@@ -25,8 +25,15 @@ export const addUpdateBottleUsage = os
     ALREADY_DONE: { status: 400, message: "This day is already marked as done" },
   })
   .handler(async ({ input, errors }) => {
-    const from = startOfDay(input.dob);
-    const to = endOfDay(input.dob);
+    const safeDate = new Date(
+      input.dob.getFullYear(),
+      input.dob.getMonth(),
+      input.dob.getDate()
+    );
+
+    const from = startOfDay(safeDate);
+    const to = endOfDay(safeDate);
+
 
     return await db.transaction(async (tx) => {
       // 1️⃣ Get TotalBottles
