@@ -276,6 +276,8 @@ export const DailyDeliveryForm = () => {
       form.reset();
       setCustomerData(null);
 
+      window.location.reload();
+
       const message = `🧑‍💼 CUSTOMER DETAILS
 ID: ${customerData.customer_id}
 Name: ${customerData.name}
@@ -313,55 +315,6 @@ Advance Amount: ${advance_payment}/-
 
 
 
-
-      //       if (deliveryRecord.success) {
-      //         // Send WhatsApp message as a server action
-      //         const wa_customer_invoice = `*🧑‍💼 CUSTOMER DETAILS*
-      // ID: *${customerData.customer_id}*
-      // Name: *${customerData.name}*
-      // Phone: *${customerData.phone}*
-      // Bottle Price: *${customerData.bottle_price}/-*
-      // Empty Bottles Remaining: *${data.customer_bottles}*
-
-      // *💧 BOTTLE DETAILS*
-      // Filled Bottles: *${data.filled_bottles}*
-      // Empty Bottles: *${data.empty_bottles}*
-      // ${data.damaged_bottles ? `Damaged Bottles: *${data.damaged_bottles}*` : ""}
-      // ${data.foc ? `FOC Bottles: *${data.foc}*` : ""}
-
-      // *💰 BALANCE SUMMARY*
-      // ${data.foc ? `FOC Discount: *${data.foc * customerData.bottle_price}/-*` : ""}
-      // Today's Bill: *${Math.max(0, data.filled_bottles * customerData.bottle_price - data.foc * customerData.bottle_price)}/-*
-      // Payment Received: *${payment}/-*
-      // Total Remaining Balance: *${previous_balance}/-*
-      // Advance Amount: *${advance_payment}/-*`;
-
-      //         try {
-      //           const whatsappResult = await sendWhatsAppMessage(
-      //             customerData.phone,
-      //             wa_customer_invoice,
-      //             false
-      //           );
-      //           if (!whatsappResult.success) {
-      //             console.warn("WhatsApp message failed:", whatsappResult.message);
-      //             toast.error(
-      //               "Delivery recorded but WhatsApp message failed to send"
-      //             );
-      //           } else {
-      //             toast.success("Delivery recorded and WhatsApp message sent!");
-      //           }
-      //         } catch (whatsappError) {
-      //           console.warn("WhatsApp message error:", whatsappError);
-      //           toast.error("Delivery recorded but WhatsApp message failed to send");
-      //         }
-
-      //         form.reset();
-      //         setCustomerData(null);
-      //       } else {
-      //         console.error(deliveryRecord.error);
-      //         alert("Server Error: Failed to add delivery record. Please try again.");
-      //         toast.error(deliveryRecord.error);
-      //       }
     } catch (error) {
       console.error("Error adding delivery record:", error);
       alert(
@@ -371,23 +324,6 @@ Advance Amount: ${advance_payment}/-
       setSubmitting(false);
     }
   }
-
-  // const handleCustomerSearch = async () => {
-  //   setLoading(true);
-  //   const data = await getCustomerDataById(
-  //     form.getValues("customer_id"),
-  //     moderator?.areas || []
-  //   );
-  //   setLoading(false);
-
-  //   if (data.success) {
-  //     setCustomerData(data.data);
-  //     toast.success("Customer found successfully!");
-  //   } else {
-  //     setCustomerData(null);
-  //     alert(data.error);
-  //   }
-  // };
 
   const [openAreaBox, setOpenAreaBox] = useState(false);
   const [modArea, setModArea] = useState<
@@ -431,33 +367,7 @@ Advance Amount: ${advance_payment}/-
               <FormItem>
                 <FormControl>
                   <div className="grid md:grid-cols-2 gap-4">
-                    {/* <div>
-                      <FormLabel className="flex items-center gap-2 mb-2">
-                        Select Area
-                        {fetchingCustomerList && (
-                          <Loader2 className="animate-spin size-4" />
-                        )}
-                      </FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          setModArea(
-                            value as (typeof Customer.$inferSelect)["area"]
-                          );
-                          setCustomerData(null);
-                        }}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Area" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {moderator?.areas.map((area) => (
-                            <SelectItem value={area} key={area}>
-                              {area}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div> */}
+
                     <div className="w-full">
                       <FormLabel className="flex items-center gap-2 mb-2">
                         Select Area
