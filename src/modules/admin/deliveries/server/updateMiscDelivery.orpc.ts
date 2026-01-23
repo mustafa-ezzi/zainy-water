@@ -50,10 +50,17 @@ export const updateMiscDelivery = adminProcedure
         .where(
           and(
             eq(BottleUsage.moderator_id, data.Moderator.id),
-            gte(BottleUsage.createdAt, startOfDay(new Date())),
-            lte(BottleUsage.createdAt, new Date())
+            gte(
+              BottleUsage.createdAt,
+              startOfDay(data.Miscellaneous.delivery_date)
+            ),
+            lte(
+              BottleUsage.createdAt,
+              new Date(data.Miscellaneous.delivery_date)
+            )
           )
         )
+
         .limit(1);
 
       if (!bottleUsage) {

@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { BottleUsage, TotalBottles, OtherExpense } from "@/db/schema";
+import { BottleUsage, TotalBottles, OtherExpense, Miscellaneous } from "@/db/schema";
 import { ORPCError, os } from "@orpc/server";
 import { startOfDay, endOfDay } from "date-fns";
 import { and, eq, gte, lte } from "drizzle-orm";
@@ -66,6 +66,21 @@ export const deleteBottleUsage = os
           );
       }
 
+      // 3.5️⃣ Delete miscellaneous entries of that day
+      await tx
+        .delete(Miscellaneous)
+        .where(
+          and(
+            eq(Miscellaneous.moderator_id, input.moderator_id),
+            gte(Miscellaneous.delivery_date, from),
+            lte(Miscellaneous.delivery_date, to)
+          )
+        );
+
+
+
+
+
       // 4️⃣ Get total bottles
       const [total] = await tx.select().from(TotalBottles).limit(1);
       if (!total) {
@@ -73,7 +88,7 @@ export const deleteBottleUsage = os
       }
 
       const rollbackAmount = usage.filled_bottles ?? 0;
-      
+
       // 5️⃣ Rollback stock
       const [updatedTotal] = await tx
         .update(TotalBottles)

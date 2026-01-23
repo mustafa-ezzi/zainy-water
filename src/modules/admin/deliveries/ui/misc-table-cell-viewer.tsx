@@ -179,7 +179,7 @@ export function MiscellaneousTableCellViewer({ item }: { item: columnSchema }) {
                 {item.Miscellaneous.customer_name}
               </div>
               <div>By: {item.Moderator.name}</div>
-              <div>Date: {format(item.Miscellaneous.createdAt, "PPP")}</div>
+              <div>Date: {format(item.Miscellaneous.delivery_date, "PPP")}</div>
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
