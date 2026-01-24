@@ -183,6 +183,13 @@
       "when": 1760895587733,
       "tag": "0025_purple_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1769252870673,
+      "tag": "0026_open_starhawk",
+      "breakpoints": true
     }
   ]
 }

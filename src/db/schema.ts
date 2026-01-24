@@ -51,6 +51,8 @@ export const Customer = pgTable(
     address: text("address").notNull(),
     area: Area("area").notNull(),
     phone: varchar("phone", { length: 50 }).notNull(),
+    mobile_number: varchar("mobile_number", { length: 50 }),
+
     bottle_price: integer("bottle_price").notNull(),
     bottles: integer("bottles").notNull(),
     deposit: integer("deposit").notNull(),

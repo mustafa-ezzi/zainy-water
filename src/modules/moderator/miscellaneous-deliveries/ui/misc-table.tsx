@@ -69,7 +69,7 @@ export const MiscDeliveryTable = () => {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="h-9 py-2 min-w-[150px]">Date</TableHead>
+              <TableHead className="h-9 py-2 min-w-37.5">Date</TableHead>
               <TableHead className="h-9 py-2 min-w-[150px]">
                 Customer Name
               </TableHead>
@@ -100,7 +100,7 @@ export const MiscDeliveryTable = () => {
             {miscDeliveries.map((delivery) => (
               <TableRow key={delivery.id}>
                 <TableCell className="py-2 font-medium">
-                  {format(delivery.createdAt, "PPP")}
+                  {format(delivery.delivery_date, "PPP")}
                 </TableCell>
                 <TableCell className="py-2">{delivery.customer_name}</TableCell>
                 <TableCell className="py-2">{delivery.description}</TableCell>

@@ -134,6 +134,13 @@ const columns: ColumnDef<columnSchema>[] = [
     },
   },
   {
+    accessorKey: "mobile_number",
+    header: "Mobile Number",
+    cell: ({ row }) => {
+      return <div>{row.original.Customer.mobile_number}</div>;
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (

@@ -54,6 +54,11 @@ const formSchema = z.object({
       /^\+\d{1,4}\d{10}$/,
       "Invalid phone number format. Use format: +92 333 6669999"
     ),
+  mobile_number: z
+    .string()
+    .min(1, "Mobile number is required")
+    .regex(/^03\d{9}$/, "Use format: 03XXXXXXXXX"),
+
   address: z.string().min(2),
   area: z.enum(Area.enumValues),
   bottles: z.number().min(0),
@@ -75,6 +80,8 @@ export const CustomerAddForm = () => {
       name: "",
       customer_id: "",
       phone: "",
+      mobile_number: "",
+
       address: "",
       area: undefined,
       bottles: 0,
@@ -174,6 +181,21 @@ export const CustomerAddForm = () => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="mobile_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="03XXXXXXXXX" />
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>Example: 03012345678</FormDescription>
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="customerSince"
