@@ -6,7 +6,9 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { endOfDay, startOfDay } from "date-fns";
 
 export const getMiscDeliveriesByMod = os
-  .input(z.object({ id: z.string(), dob: z.date() }))
+  .input(z.object({
+    id: z.string(), dob: z.coerce.date()
+  }))
   .output(
     z.union([z.array(z.custom<typeof Miscellaneous.$inferSelect>()), z.null()])
   )
