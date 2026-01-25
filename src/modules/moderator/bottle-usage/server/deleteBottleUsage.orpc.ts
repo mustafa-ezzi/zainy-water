@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { BottleUsage, TotalBottles, OtherExpense, Miscellaneous } from "@/db/schema";
+import { BottleUsage, TotalBottles, OtherExpense, Miscellaneous, Delivery } from "@/db/schema";
 import { ORPCError, os } from "@orpc/server";
 import { startOfDay, endOfDay } from "date-fns";
 import { and, eq, gte, lte } from "drizzle-orm";
@@ -76,6 +76,18 @@ export const deleteBottleUsage = os
             lte(Miscellaneous.delivery_date, to)
           )
         );
+
+      // 3.6️⃣ Delete deliveries of that day
+      await tx
+        .delete(Delivery)
+        .where(
+          and(
+            eq(Delivery.moderator_id, input.moderator_id),
+            gte(Delivery.delivery_date, from),
+            lte(Delivery.delivery_date, to)
+          )
+        );
+
 
 
 

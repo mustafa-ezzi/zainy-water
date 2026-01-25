@@ -290,8 +290,11 @@ export function DeliveriesTableCellViewer({ item }: { item: columnSchema }) {
                         <span className="text-sm font-semibold text-right">
                           {key === "balance" && Number(value) < 0
                             ? Math.abs(Number(value)).toString()
-                            : value.toString()}
+                            : value != null
+                              ? String(value)
+                              : "—"}
                         </span>
+
                       </li>
                     );
                   })}
