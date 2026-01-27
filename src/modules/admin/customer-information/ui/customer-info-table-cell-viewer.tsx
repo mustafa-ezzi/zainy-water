@@ -67,10 +67,7 @@ const formSchema = z.object({
   name: z.string().min(2),
   customer_id: z.string().min(2),
   phone: z.string().min(2),
-  mobile_number: z
-    .string()
-    .min(1, "Mobile number is required")
-    .regex(/^03\d{9}$/, "Use format: 03XXXXXXXXX"),
+  mobile_number: z.string().optional().or(z.literal("")),
   address: z.string().min(2),
   area: z.enum(Area.enumValues),
   bottles: z.number().min(0),
@@ -96,7 +93,7 @@ export const CustomerInfoTableCellViewer = ({
       name: item.Customer.name,
       customer_id: item.Customer.customer_id,
       phone: item.Customer.phone,
-      mobile_number: item.Customer.mobile_number ?? "",
+      mobile_number: item.Customer.mobile_number ?? undefined,
 
       address: item.Customer.address,
       area: item.Customer.area,
@@ -138,8 +135,7 @@ export const CustomerInfoTableCellViewer = ({
     form.watch("name") === item.Customer.name &&
     form.watch("customer_id") === item.Customer.customer_id &&
     form.watch("phone") === item.Customer.phone &&
-    form.watch("mobile_number") === item.Customer.mobile_number &&
-
+    // form.watch("mobile_number") === item.Customer.mobile_number && 
     form.watch("address") === item.Customer.address &&
     form.watch("area") === item.Customer.area &&
     form.watch("bottles") === item.Customer.bottles &&

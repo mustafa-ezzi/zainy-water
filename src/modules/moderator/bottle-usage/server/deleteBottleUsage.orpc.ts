@@ -88,11 +88,6 @@ export const deleteBottleUsage = os
           )
         );
 
-
-
-
-
-
       // 4️⃣ Get total bottles
       const [total] = await tx.select().from(TotalBottles).limit(1);
       if (!total) {
