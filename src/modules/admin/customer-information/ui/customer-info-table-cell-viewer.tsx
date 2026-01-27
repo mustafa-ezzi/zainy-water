@@ -94,7 +94,6 @@ export const CustomerInfoTableCellViewer = ({
       customer_id: item.Customer.customer_id,
       phone: item.Customer.phone,
       mobile_number: item.Customer.mobile_number ?? undefined,
-
       address: item.Customer.address,
       area: item.Customer.area,
       bottles: item.Customer.bottles,
