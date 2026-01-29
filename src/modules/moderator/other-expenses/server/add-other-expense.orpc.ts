@@ -30,71 +30,76 @@ export const addOtherExpense = os
   })
   .handler(async ({ input, errors }) => {
     try {
-      if (input.refilled_bottles > 0) {
-        // 1️⃣ Get usage for selected date
-        let [usage] = await db
+      // 1. Always get today's usage
+      let [usage] = await db
+        .select()
+        .from(BottleUsage)
+        .where(
+          and(
+            eq(BottleUsage.moderator_id, input.moderator_id),
+            gte(BottleUsage.createdAt, startOfDay(input.date)),
+            lte(BottleUsage.createdAt, endOfDay(input.date))
+          )
+        )
+        .orderBy(desc(BottleUsage.createdAt))
+        .limit(1);
+
+      // 2. If not exists → clone from latest
+      if (!usage) {
+        const [latestUsage] = await db
           .select()
           .from(BottleUsage)
-          .where(
-            and(
-              eq(BottleUsage.moderator_id, input.moderator_id),
-              gte(BottleUsage.createdAt, startOfDay(input.date)),
-              lte(BottleUsage.createdAt, endOfDay(input.date))
-            )
-          )
+          .where(eq(BottleUsage.moderator_id, input.moderator_id))
           .orderBy(desc(BottleUsage.createdAt))
           .limit(1);
 
-        // 2️⃣ If not found → clone from latest
-        if (!usage) {
-          const [latestUsage] = await db
-            .select()
-            .from(BottleUsage)
-            .where(eq(BottleUsage.moderator_id, input.moderator_id))
-            .orderBy(desc(BottleUsage.createdAt))
-            .limit(1);
+        const [inserted] = await db
+          .insert(BottleUsage)
+          .values({
+            moderator_id: input.moderator_id,
+            filled_bottles: 0,
+            empty_bottles: latestUsage?.empty_bottles ?? 0,
+            remaining_bottles: latestUsage?.remaining_bottles ?? 0,
+            caps: latestUsage?.caps ?? 0,
+            expense: latestUsage?.expense ?? 0,
+            createdAt: input.date,
+          })
+          .returning();
 
-          const [inserted] = await db
-            .insert(BottleUsage)
-            .values({
-              moderator_id: input.moderator_id,
-              filled_bottles: 0,
-              empty_bottles: latestUsage?.empty_bottles ?? 0,
-              remaining_bottles: latestUsage?.remaining_bottles ?? 0,
-              caps: latestUsage?.caps ?? 0,
-              expense: latestUsage?.expense ?? 0,
-              createdAt: input.date,
-            })
-            .returning();
+        usage = inserted;
+      }
 
-
-          usage = inserted;
-        }
-
-        // 3️⃣ Validation (THE REAL ONE)
+      // 3. Validate only if bottles > 0
+      if (input.refilled_bottles > 0) {
         if (
           usage.empty_bottles < input.refilled_bottles ||
           usage.caps < input.refilled_bottles
         ) {
           throw errors.BAD_REQUEST();
         }
-
-        // 4️⃣ Update bottles correctly
-        await db
-          .update(BottleUsage)
-          .set({
-            empty_bottles: usage.empty_bottles - input.refilled_bottles,
-            remaining_bottles:
-              usage.remaining_bottles + input.refilled_bottles,
-            caps: usage.caps - input.refilled_bottles,
-            refilled_bottles:
-              (usage.refilled_bottles ?? 0) + input.refilled_bottles,
-            expense: usage.expense + input.amount,
-          })
-          .where(eq(BottleUsage.id, usage.id));
       }
 
-      // 5️⃣ Insert expense with chosen date
+      // 4. Always update expense, conditionally update bottles
+      await db
+        .update(BottleUsage)
+        .set({
+          empty_bottles:
+            usage.empty_bottles - (input.refilled_bottles || 0),
+
+          remaining_bottles:
+            usage.remaining_bottles + (input.refilled_bottles || 0),
+
+          caps:
+            usage.caps - (input.refilled_bottles || 0),
+
+          refilled_bottles:
+            (usage.refilled_bottles ?? 0) + (input.refilled_bottles || 0),
+
+          expense: usage.expense + input.amount, // 👈 NOW ALWAYS ADDS
+        })
+        .where(eq(BottleUsage.id, usage.id));
+
+      // 5. Insert expense record
       await db.insert(OtherExpense).values({
         moderator_id: input.moderator_id,
         amount: input.amount,
@@ -112,6 +117,7 @@ export const addOtherExpense = os
       };
     }
   });
+
 
 export const getOtherExpensesByModeratorId = os
   .input(
