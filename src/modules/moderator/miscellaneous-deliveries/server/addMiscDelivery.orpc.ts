@@ -96,6 +96,8 @@ export const addMiscDelivery = os
             empty_bottles: bottleUsage.empty_bottles + input.empty_bottles,
             damaged_bottles:
               bottleUsage.damaged_bottles + input.damaged_bottles,
+            revenue: bottleUsage.revenue + (input.isPaid ? input.payment : 0), 
+
           })
           .where(eq(BottleUsage.id, bottleUsage.id)),
       ]);
