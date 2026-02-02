@@ -170,6 +170,28 @@ const columns: ColumnDef<columnSchema>[] = [
     ),
   },
   {
+    accessorKey: "is_online",
+    header: () => <div className="w-full text-center">Payment Mode</div>,
+    cell: ({ row }) => {
+      const isOnline = row.original.Delivery.is_online;
+
+      return (
+        <div className="flex justify-center">
+          {isOnline ? (
+            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-200">
+              Online
+            </Badge>
+          ) : (
+            <Badge className="bg-slate-500/10 text-slate-600 border-slate-200">
+              Cash
+            </Badge>
+          )}
+        </div>
+      );
+    },
+  },
+
+  {
     accessorKey: "balance",
     header: () => <div className="w-full text-center">Balance</div>,
     cell: ({ row }) => {
@@ -395,6 +417,8 @@ export function DataTable3DailyDeliveries({
       "Date",
       "Status",
       "Moderator",
+      "Payment Mode", // 👈 add
+
       "Payment",
       "Balance",
       "Filled",
@@ -418,6 +442,8 @@ export function DataTable3DailyDeliveries({
         `"${format(new Date(Delivery.delivery_date), "PPPP")}"`,
         `"${status}"`,
         `"${Moderator.name.replace(/"/g, '""')}"`,
+        `"${Delivery.is_online ? "Online" : "Cash"}"`, // 👈 here
+
         `"${Delivery.payment ?? ""}"`,
         `"${balance}"`,
         `"${Delivery.filled_bottles ?? ""}"`,

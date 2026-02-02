@@ -21,6 +21,8 @@ export const DeliveryRecordZod = z.object({
   balance: z.number(),
   customer_bottles: z.number(),
   payment: z.number(),
+    is_online: z.boolean().default(false),
+
   moderator_id: z.string(),
   delivery_date: z.date(),
 });
@@ -130,6 +132,8 @@ export const addDailyDelivery = os
               moderator_id: input.moderator_id,
               delivery_date: input.delivery_date,
               payment: input.payment,
+                is_online: input.is_online,
+
               filled_bottles: input.filled_bottles,
               empty_bottles: input.empty_bottles,
               foc: input.foc,

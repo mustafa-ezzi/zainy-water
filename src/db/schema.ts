@@ -107,6 +107,8 @@ export const Delivery = pgTable(
     moderator_id: varchar("moderator_id", { length: 255 }).notNull(),
     delivery_date: timestamp("delivery_date", { withTimezone: true }).notNull(),
     payment: integer("payment").notNull(),
+    is_online: boolean("is_online").notNull().default(false),
+
     filled_bottles: integer("filled_bottles").notNull(),
     empty_bottles: integer("empty_bottles").notNull(),
     foc: integer("foc").notNull(),

@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDOBStore } from "@/lib/ui-states/date-of-bottle-usage";
+import { Switch } from "@/components/ui/switch";
 
 // FORM SCHEMA
 const formSchema = z
@@ -55,6 +56,8 @@ const formSchema = z
     foc: z.number().min(0),
     damaged_bottles: z.number().min(0),
     payment: z.number().min(0),
+    is_online: z.boolean().default(false),
+
   })
   .refine((data) => data.foc <= data.filled_bottles, {
     message: "FOC bottles cannot exceed filled bottles",
@@ -82,6 +85,8 @@ export const DailyDeliveryForm = () => {
       foc: 0,
       damaged_bottles: 0,
       payment: 0,
+      is_online: false,
+
     },
   });
 
@@ -256,6 +261,8 @@ export const DailyDeliveryForm = () => {
         values.deposit_bottles_given - values.deposit_bottles_taken,
       foc: values.foc,
       damaged_bottles: values.damaged_bottles,
+      is_online: values.is_online,
+
       customer_bottles: Math.max(
         customerData.bottles +
         values.filled_bottles -
@@ -276,7 +283,7 @@ export const DailyDeliveryForm = () => {
       form.reset();
       setCustomerData(null);
 
-      window.location.reload();
+      
 
       const message = `🧑‍💼 CUSTOMER DETAILS
 ID: ${customerData.customer_id}
@@ -741,6 +748,26 @@ Advance Amount: ${advance_payment}/-
                   </div>
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="is_online"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Online Payment</FormLabel>
+                  <p className="text-sm text-muted-foreground">
+                    Toggle if payment is received online
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />
