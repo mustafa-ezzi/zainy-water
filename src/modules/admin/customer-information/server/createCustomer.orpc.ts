@@ -11,47 +11,41 @@ export const CreateNewCustomerDataSchema = z.object({
 export const createCustomer = adminProcedure
   .input(CreateNewCustomerDataSchema)
   .output(z.void())
-  .handler(async ({ input: data }) => {
-    try {
-      const [total_bottles] = await db
+  .handler(async ({ input }) => {
+    const customer = input.data;
+
+    await db.transaction(async (tx) => {
+      // 🔒 ALWAYS read inside transaction
+      const [total] = await tx
         .select()
         .from(TotalBottles)
         .orderBy(desc(TotalBottles.createdAt))
         .limit(1);
 
-      if (!total_bottles) {
-        throw new Error(
-          "Cannot create customer: TotalBottles entry does not exist."
-        );
+      if (!total) {
+        throw new Error("TotalBottles entry does not exist.");
       }
 
-      if (data.data.deposit > total_bottles.available_bottles) {
-        throw new Error(
-          "Cannot create customer: Not enough available bottles for the deposit."
-        );
+      if (customer.deposit > total.available_bottles) {
+        throw new Error("Not enough available bottles for deposit.");
       }
 
-      await db.transaction(async (tx) => {
-        await Promise.all([
-          tx
-            .update(TotalBottles)
-            .set({
-              total_bottles: total_bottles.total_bottles - data.data.deposit,
-              available_bottles:
-                total_bottles.available_bottles - data.data.deposit,
-              deposit_bottles:
-                total_bottles.deposit_bottles + data.data.deposit,
-            })
-            .where(eq(TotalBottles.id, total_bottles.id)),
+      const deposit = customer.deposit ?? 0;
 
-          tx.insert(Customer).values({
-            ...data.data,
-            customer_id: data.data.customer_id.toLowerCase(),
-          }),
-        ]);
+      // ✅ Update bottles FIRST
+      await tx
+        .update(TotalBottles)
+        .set({
+          total_bottles: total.total_bottles - deposit,
+          available_bottles: total.available_bottles - deposit,
+          deposit_bottles: (total.deposit_bottles ?? 0) + deposit,
+        })
+        .where(eq(TotalBottles.id, total.id));
+
+      // ✅ Then create customer
+      await tx.insert(Customer).values({
+        ...customer,
+        customer_id: customer.customer_id.toLowerCase(),
       });
-    } catch (error) {
-      console.error("Error creating new customer:", error);
-      throw error;
-    }
+    });
   });

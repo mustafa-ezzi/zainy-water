@@ -50,34 +50,34 @@ export function CallbackForm() {
   const { user } = useUser();
   const [submitting, setSubmitting] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [checkingUser, setCheckingUser] = useState(true);
+  // const [checkingUser, setCheckingUser] = useState(true);
 
 
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user) return;
+  // useEffect(() => {
+  //   if (!isLoaded || !isSignedIn || !user) return;
 
-    const email = user.primaryEmailAddress?.emailAddress;
-    if (!email) {
-      setCheckingUser(false);
-      return;
-    }
+  //   const email = user.primaryEmailAddress?.emailAddress;
+  //   if (!email) {
+  //     setCheckingUser(false);
+  //     return;
+  //   }
 
-    const checkUser = async () => {
-      try {
-        const res = await client.auth.checkUserExists({ email });
+  //   const checkUser = async () => {
+  //     try {
+  //       const res = await client.auth.checkUserExists({ email });
 
-        if (res.exists) {
-          router.replace("/password"); // existing user
-        }
-      } catch (err) {
-        console.error("User check failed:", err);
-      } finally {
-        setCheckingUser(false);
-      }
-    };
+  //       if (res.exists) {
+  //         router.replace("/password"); // existing user
+  //       }
+  //     } catch (err) {
+  //       console.error("User check failed:", err);
+  //     } finally {
+  //       setCheckingUser(false);
+  //     }
+  //   };
 
-    checkUser();
-  }, [isLoaded, isSignedIn, user, router]);
+  //   checkUser();
+  // }, [isLoaded, isSignedIn, user, router]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -111,15 +111,20 @@ export function CallbackForm() {
         }
         setRequested(true);
       },
-      onError: (error) => {
-        toast.error(error.message || "Failed to request license.");
-        console.error("Failed to request license:", error);
-      },
+      onError: (error: any) => {
+        const msg =
+          error?.data?.message ||
+          error?.message ||
+          "Failed to request license.";
+        toast.error(msg);
+        console.error("License request error:", error);
+      }
+
     }),
   );
 
 
-  if (!isLoaded || checkingUser) {
+  if (!isLoaded) {
     return (
       <Card className="w-full max-w-sm">
         <CardContent className="flex items-center justify-center py-8">

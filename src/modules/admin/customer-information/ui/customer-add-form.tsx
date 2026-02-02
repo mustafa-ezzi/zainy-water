@@ -187,7 +187,25 @@ export const CustomerAddForm = () => {
                     </FormItem>
                   )}
                 />
+
                 <FormField
+                  control={form.control}
+                  name="mobile_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number</FormLabel>
+                      <FormControl>
+                        <PhoneInputComponent field={field} />
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>
+                        Use format +92 31234 56789
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                {/* <FormField
                   control={form.control}
                   name="mobile_number"
                   render={({ field }) => (
@@ -201,7 +219,7 @@ export const CustomerAddForm = () => {
                       </FormDescription>
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 <FormField
                   control={form.control}

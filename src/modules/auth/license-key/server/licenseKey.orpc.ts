@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+
+
 import { os } from "@orpc/server";
 import { z } from "zod";
 import { currentUser } from "@clerk/nextjs/server";
@@ -124,12 +127,15 @@ export async function sendLicenseEmail({
   license_key: string;
 }) {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
+
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
