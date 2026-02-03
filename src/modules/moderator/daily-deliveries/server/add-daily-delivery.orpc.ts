@@ -21,7 +21,7 @@ export const DeliveryRecordZod = z.object({
   balance: z.number(),
   customer_bottles: z.number(),
   payment: z.number(),
-    is_online: z.boolean().default(false),
+  is_online: z.boolean().default(false),
 
   moderator_id: z.string(),
   delivery_date: z.date(),
@@ -52,8 +52,8 @@ export const addDailyDelivery = os
         return { success: false, error: "Customer is not active." };
       }
 
-      // get bottle usage for the day
-      const [bottleUsage] = await db
+      // get bottle usage for the day (create one if missing)
+      let [bottleUsage] = await db
         .select()
         .from(BottleUsage)
         .where(
@@ -66,6 +66,56 @@ export const addDailyDelivery = os
         .orderBy(desc(BottleUsage.createdAt))
         .limit(1);
 
+      // If no bottle usage exists for this day (or the existing one is marked done), create a fresh record
+      if (!bottleUsage || bottleUsage.done) {
+        // Get the most recent previous bottle usage to carry over remaining/empty counts
+        const [previousBottleUsage] = await db
+          .select()
+          .from(BottleUsage)
+          .where(eq(BottleUsage.moderator_id, input.moderator_id))
+          .orderBy(desc(BottleUsage.createdAt))
+          .limit(1);
+
+        try {
+          const [newBottleUsage] = await db
+            .insert(BottleUsage)
+            .values({
+              moderator_id: input.moderator_id,
+              filled_bottles: 0,
+              empty_bottles: previousBottleUsage?.empty_bottles ?? 0,
+              remaining_bottles: previousBottleUsage?.remaining_bottles ?? 0,
+              damaged_bottles: previousBottleUsage?.damaged_bottles ?? 0,
+              sales: 0,
+              revenue: 0,
+              createdAt: startOfDay(input.delivery_date),
+              done: false,
+            })
+            .returning();
+
+          bottleUsage = newBottleUsage;
+        } catch (insertError) {
+          // Race condition: another process might have created it. Try to fetch again and proceed if found.
+          const [existingUsage] = await db
+            .select()
+            .from(BottleUsage)
+            .where(
+              and(
+                eq(BottleUsage.moderator_id, input.moderator_id),
+                gte(BottleUsage.createdAt, startOfDay(input.delivery_date)),
+                lte(BottleUsage.createdAt, endOfDay(input.delivery_date))
+              )
+            )
+            .orderBy(desc(BottleUsage.createdAt))
+            .limit(1);
+
+          if (existingUsage) {
+            bottleUsage = existingUsage;
+          } else {
+            throw insertError;
+          }
+        }
+      }
+
       // get total bottles record
       const [totalBottles] = await db
         .select()
@@ -73,7 +123,7 @@ export const addDailyDelivery = os
         .orderBy(desc(TotalBottles.createdAt))
         .limit(1);
 
-      if (!bottleUsage || bottleUsage.done)
+      if (!bottleUsage)
         return { success: false, error: "Bottle usage record not found." };
 
       if (!totalBottles) {
@@ -132,7 +182,7 @@ export const addDailyDelivery = os
               moderator_id: input.moderator_id,
               delivery_date: input.delivery_date,
               payment: input.payment,
-                is_online: input.is_online,
+              is_online: input.is_online,
 
               filled_bottles: input.filled_bottles,
               empty_bottles: input.empty_bottles,

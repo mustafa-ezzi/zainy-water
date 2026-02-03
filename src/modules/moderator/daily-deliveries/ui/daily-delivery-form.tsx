@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { BottleInput } from "@/components/bottle-input";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,7 @@ export const DailyDeliveryForm = () => {
     calculateBalances();
 
   const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   // FORM SUBMISSION HANDLER
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -274,16 +276,20 @@ export const DailyDeliveryForm = () => {
     console.log({ data });
 
     try {
-      // const deliveryRecord = await addDailyDeliveryRecord(data);
       const result = await client.moderator.deliveries.addDailyDelivery(data);
       if (!result.success) {
         throw new Error(result.error);
       }
+
+      await queryClient.invalidateQueries({
+        queryKey: ["moderator.bottleUsage"],
+      });
+
       toast.success("Delivery record added successfully!");
       form.reset();
       setCustomerData(null);
 
-      
+
 
       const message = `🧑‍💼 CUSTOMER DETAILS
 ID: ${customerData.customer_id}
