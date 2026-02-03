@@ -112,7 +112,7 @@ export const DailyDeliveryTable = () => {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="h-9 py-2 min-w-[100px]">Date</TableHead>
-              <TableHead className="h-9 py-2 min-w-[150px]">C.Code</TableHead>
+              <TableHead className="h-9 py-2 min-w-[80px]">C.Code</TableHead>
               <TableHead className="h-9 py-2 min-w-[120px]">Name</TableHead>
               <TableHead className="h-9 py-2 min-w-[150px]">Address</TableHead>
               <TableHead className="h-9 py-2 min-w-[60px]">Filled</TableHead>
@@ -142,8 +142,8 @@ export const DailyDeliveryTable = () => {
                 <TableCell className="py-2 min-w-[100px] whitespace-nowrap">
                   {format(delivery.delivery_date, "PPP")}
                 </TableCell>
-                <TableCell className="py-2 min-w-[150px] whitespace-nowrap">
-                  {delivery.customer_id}
+                <TableCell className="py-2 min-w-[80px] whitespace-nowrap">
+                  {delivery.customer_id.slice(-6)}
                 </TableCell>
                 <TableCell className="py-2 min-w-[120px]">
                   <div className="truncate max-w-[120px]" title={customer.name}>

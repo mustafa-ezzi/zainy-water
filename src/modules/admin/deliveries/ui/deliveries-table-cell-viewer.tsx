@@ -175,7 +175,7 @@ export function DeliveriesTableCellViewer({ item }: { item: columnSchema }) {
             <DrawerDescription>
               <div>Showing details of delivery for {item.Customer.name}</div>
               <div>By: {item.Moderator.name}</div>
-              <div>Date: {format(item.Delivery.createdAt, "PPP")}</div>
+              <div>Date: {format(item.Delivery.delivery_date, "PPP")}</div>
             </DrawerDescription>
           </DrawerHeader>
           <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">

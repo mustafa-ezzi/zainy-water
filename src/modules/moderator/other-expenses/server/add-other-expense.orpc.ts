@@ -91,7 +91,7 @@ export const addOtherExpense = os
 
           caps:
             usage.caps - (input.refilled_bottles || 0),
-
+          
           refilled_bottles:
             (usage.refilled_bottles ?? 0) + (input.refilled_bottles || 0),
 

@@ -34,8 +34,8 @@ export const updateDailyDelivery = adminProcedure
     })
   )
   .handler(async ({ input: data }) => {
-    const from = startOfDay(data.Delivery.createdAt);
-    const to = endOfDay(data.Delivery.createdAt);
+    const from = startOfDay(data.Delivery.delivery_date);
+    const to = endOfDay(data.Delivery.delivery_date);
 
     try {
       const [bottleUsage] = await db
