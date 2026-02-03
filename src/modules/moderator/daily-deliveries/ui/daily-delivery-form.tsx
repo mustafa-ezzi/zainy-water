@@ -291,27 +291,28 @@ export const DailyDeliveryForm = () => {
 
 
 
-      const message = `🧑‍💼 CUSTOMER DETAILS
-ID: ${customerData.customer_id}
-Name: ${customerData.name}
-Phone: ${customerData.phone}
-Bottle Price: ${customerData.bottle_price}/-
-Empty Bottles Remaining: ${customerData.bottles}
+      const message = `Hi ${customerData.name} 👋  
+Here’s your water delivery receipt for today:
 
-💧 BOTTLE DETAILS
-Filled Bottles: ${data.filled_bottles}
-Empty Bottles: ${data.empty_bottles}
-Leak Bottles: ${data.damaged_bottles}
-FOC Bottles: ${data.foc}
+🧾 Customer ID: ${customerData.customer_id}
 
-💰 PAYMENT SUMMARY
-FOC: ${data.foc * customerData.bottle_price}/-
-Today's Bill: ${Math.max(0, data.filled_bottles * customerData.bottle_price - data.foc * customerData.bottle_price)
-        }/-
-Amount Received: ${data.payment}/-
-Total Remaining Balance: ${previous_balance}/-
-Advance Amount: ${advance_payment}/-
-`;
+💧 Bottle Details
+* Bottle Price: Rs ${customerData.bottle_price}
+* Filled Bottles Delivered: ${data.filled_bottles}
+* Empty Bottles Collected: ${data.empty_bottles}
+* Empty Bottles Remaining: ${customerData.bottles}
+* Leak Bottles: ${data.damaged_bottles}
+* FOC Bottles (Free): ${data.foc}
+
+💰 Payment Summary
+* Today’s Bill: Rs ${Math.max(0, data.filled_bottles * customerData.bottle_price - data.foc * customerData.bottle_price)}
+* Amount Received: Rs ${data.payment}
+* Advance Balance: Rs ${advance_payment}
+* Total Due Balance: Rs ${previous_balance}
+
+If anything doesn’t look right, just reply here and we’ll fix it.  
+Thank you 🙏`;
+
 
       // await fetch("http://localhost:3001/send", {
       await fetch("https://water-web-server-production.up.railway.app/send", {

@@ -112,21 +112,21 @@ export const deleteDailyDelivery = os
     }
     await sendWhatsAppMessage(
       input.data.customer.phone,
-      `⚠️ *Delivery Deleted Notice*
+      `Hi ${input.data.customer.name},  
+We corrected a delivery entry from today due to a recording mistake.
 
-The delivery made on:
-🕒 ${format(input.data.delivery.createdAt, "hh:mm aaaa PPPP")}
+🕒 Delivery Time: ${format(input.data.delivery.createdAt, "hh:mm aaaa")}, ${format(input.data.delivery.createdAt, "PPPP")}
 
-❌ This entry was removed due to an incorrect delivery record.
+💧 Bottle Details
+* Filled Bottles: ${input.data.delivery.filled_bottles}
+* Empty Bottles Collected: ${input.data.delivery.empty_bottles}
+* FOC Bottles (Free): ${input.data.delivery.foc || 0}
 
-📦 Details:
-• Customer: ${input.data.customer.name}
-• Filled Bottles: ${input.data.delivery.filled_bottles}
-• Empty Bottles: ${input.data.delivery.empty_bottles}
-• Payment: ${input.data.delivery.payment}
-
-If this was a mistake, please contact support.
-Thank you.`
+💰 Payment
+* Bill Amount: Rs ${input.data.delivery.filled_bottles * input.data.customer.bottle_price - (input.data.delivery.foc || 0) * input.data.customer.bottle_price}
+* Amount Received: Rs ${input.data.delivery.payment}
+If anything here seems incorrect, please reply and we’ll check it.
+Thank you 🙏`
     );
 
   });
