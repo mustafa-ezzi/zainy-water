@@ -32,6 +32,7 @@ import {
   IconLayoutColumns,
   IconLoader,
 } from "@tabler/icons-react";
+import { Trash, Loader2 } from "lucide-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -76,6 +77,10 @@ import {
 import { Customer, Delivery, Moderator } from "@/db/schema";
 import { format, startOfDay } from "date-fns";
 import { DeliveriesTableCellViewer } from "@/modules/admin/deliveries/ui/deliveries-table-cell-viewer";
+import { orpc } from "@/lib/orpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useConfirm } from "@/hooks/use-confirm";
+import { toast } from "sonner";
 
 export type columnSchema = {
   Moderator: typeof Moderator.$inferSelect;
@@ -238,6 +243,16 @@ const columns: ColumnDef<columnSchema>[] = [
       <div className="text-right">{row.original.Delivery.damaged_bottles}</div>
     ),
   },
+  {
+    id: "delete",
+    header: () => <div className="w-full text-center">Action</div>,
+    cell: ({ row }) => {
+      return (
+        <DeleteButton item={row.original} />
+      );
+    },
+    enableHiding: false,
+  },
 ];
 
 function DraggableRow({ row }: { row: Row<columnSchema> }) {
@@ -273,6 +288,67 @@ function DraggableRow({ row }: { row: Row<columnSchema> }) {
         </TableCell>
       ))}
     </TableRow>
+  );
+}
+
+function DeleteButton({ item }: { item: columnSchema }) {
+  const queryClient = useQueryClient();
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure you want to delete this delivery?",
+    "This action cannot be undone.",
+    true
+  );
+
+  const deleteMutation = useMutation(
+    orpc.admin.deliveries.deleteDailyDelivery.mutationOptions({
+      onSuccess: async () => {
+        toast.success("Delivery deleted successfully");
+        await Promise.all([
+          queryClient.refetchQueries({
+            queryKey: orpc.util.get30dDeliveries.queryKey(),
+          }),
+        ]);
+      },
+      onError: (error) => {
+        console.error(`Failed to delete delivery: ${error}`);
+        toast.error(
+          `Failed to delete delivery: ${error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+      },
+    })
+  );
+
+  const handleDelete = async () => {
+    const ok = confirm();
+    if (!ok) return;
+
+    await deleteMutation.mutateAsync({ data: item });
+  };
+
+  return (
+    <>
+      <ConfirmDialog />
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={handleDelete}
+        disabled={deleteMutation.isPending}
+        className="w-full"
+      >
+        {deleteMutation.isPending ? (
+          <>
+            Deleting
+            <Loader2 className="size-4 animate-spin" />
+          </>
+        ) : (
+          <>
+            <Trash className="size-4" />
+            Delete
+          </>
+        )}
+      </Button>
+    </>
   );
 }
 

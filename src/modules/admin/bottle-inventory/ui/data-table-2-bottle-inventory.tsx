@@ -302,12 +302,12 @@ const columns: ColumnDef<columnSchema>[] = [
       </div>
     ),
   },
-  // {
-  //   accessorKey: "actions",
-  //   header: "",
-  //   cell: ({ row }) => <ActionButton row={row} isDelete={false} />,
-  //   enableHiding: false,
-  // },
+  {
+    accessorKey: "actions",
+    header: "",
+    cell: ({ row }) => <ActionButton row={row} isDelete={false} />,
+    enableHiding: false,
+  },
 ];
 
 function DraggableRow({ row }: { row: Row<columnSchema> }) {

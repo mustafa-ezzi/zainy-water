@@ -1,8 +1,8 @@
 import { db } from "@/db";
 import { BottleUsage, Customer, Delivery, TotalBottles } from "@/db/schema";
 import { adminProcedure } from "@/middlewares/admin-clerk";
-import { startOfDay } from "date-fns";
-import { and, desc, eq, gte } from "drizzle-orm";
+import { endOfDay, startOfDay } from "date-fns";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { columnSchema } from "../ui/data-table-3-daily-deliveries";
 
@@ -35,7 +35,8 @@ export const deleteDailyDelivery = adminProcedure
       .where(
         and(
           eq(BottleUsage.moderator_id, data.Moderator.id),
-          gte(BottleUsage.createdAt, startOfDay(new Date()))
+          gte(BottleUsage.createdAt, startOfDay(data.Delivery.delivery_date)),
+          lte(BottleUsage.createdAt, endOfDay(data.Delivery.delivery_date))
         )
       )
       .orderBy(desc(BottleUsage.createdAt))
