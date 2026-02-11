@@ -8,6 +8,7 @@ import {
   addOtherExpense,
   getOtherExpensesByModeratorId,
 } from "@/modules/moderator/other-expenses/server/add-other-expense.orpc";
+import { deleteOtherExpense } from "@/modules/moderator/other-expenses/server/deleteOtherExpense.orpc";
 import { addUpdateBottleUsage } from "@/modules/moderator/bottle-usage/server/add-update-bottle-usage.orpc";
 import { getBottleUsage } from "@/modules/moderator/bottle-usage/server/getBottleUsage.orpc";
 import { returnBottleUsage } from "@/modules/moderator/bottle-usage/server/return-bottle-usage.orpc";
@@ -68,6 +69,7 @@ export const router = {
     otherExpenses: {
       addOtherExpense,
       getOtherExpensesByModeratorId,
+      deleteOtherExpense,
     },
     bottleUsage: {
       addUpdateBottleUsage,
