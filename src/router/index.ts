@@ -30,6 +30,7 @@ import {
 import { updateTotalBottles } from "@/modules/admin/bottle-inventory/server/updateTotalBottles.orpc";
 import { dashboardAnalyticsOrpc } from "@/modules/admin/dashboard/server/dashboardAnalytics.orpc";
 import { updateOtherExpense } from "@/modules/admin/other-expenses/server/updateOtherExpense.orpc";
+import { deleteOtherExpense as adminDeleteOtherExpense } from "@/modules/admin/other-expenses/server/deleteOtherExpense.orpc";
 import {
   createModerator,
   deleteModerator,
@@ -103,6 +104,7 @@ export const router = {
     },
     otherExpenses: {
       updateOtherExpense,
+      deleteOtherExpense: adminDeleteOtherExpense,
     },
     crudModerator: {
       getModList,

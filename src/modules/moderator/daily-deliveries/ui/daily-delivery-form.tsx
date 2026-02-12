@@ -295,14 +295,15 @@ export const DailyDeliveryForm = () => {
 Here’s your water delivery receipt for today:
 
 🧾 Customer ID: ${customerData.customer_id}
+🍶 Bottle Price: Rs ${customerData.bottle_price}
+📞 Phone#1: ${customerData.phone}${customerData.mobile_number ? `\n📞 Phone#2: ${customerData.mobile_number}` : ""}
 
-💧 Bottle Details
-* Bottle Price: Rs ${customerData.bottle_price}
+🍶 Bottle Details
 * Filled Bottles Delivered: ${data.filled_bottles}
 * Empty Bottles Collected: ${data.empty_bottles}
 * Empty Bottles Remaining: ${customerData.bottles}
 * Leak Bottles: ${data.damaged_bottles}
-* FOC Bottles (Free): ${data.foc}
+* FOC Bottles: ${data.foc}
 
 💰 Payment Summary
 * Today’s Bill: Rs ${Math.max(0, data.filled_bottles * customerData.bottle_price - data.foc * customerData.bottle_price)}

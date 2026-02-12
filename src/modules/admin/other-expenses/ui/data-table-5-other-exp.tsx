@@ -76,6 +76,12 @@ import {
 import { Moderator, OtherExpense } from "@/db/schema";
 import { format, startOfDay } from "date-fns";
 import { OtherExpTableCellViewer } from "./other-exp-table-cell-viewer";
+import { Trash2, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { client } from "@/lib/orpc";
+import { toast } from "sonner";
+import { useConfirm } from "@/hooks/use-confirm";
+import { orpc } from "@/lib/orpc";
 
 export type columnSchema = {
   Moderator: typeof Moderator.$inferSelect;
@@ -102,6 +108,70 @@ function DragHandle({
       <IconGripVertical className="text-muted-foreground size-3" />
       <span className="sr-only">Drag to reorder</span>
     </Button>
+  );
+}
+
+function DeleteButton({
+  expense,
+  moderatorId,
+}: {
+  expense: typeof OtherExpense.$inferSelect;
+  moderatorId: string;
+}) {
+  const [DeleteConfirmDialog, delete_confirm] = useConfirm(
+    "Delete Expense?",
+    "Are you sure you want to delete this expense? This action cannot be undone.",
+    true
+  );
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await client.admin.otherExpenses.deleteOtherExpense({
+        expenseId: expense.id,
+        moderatorId: moderatorId,
+        expenseAmount: expense.amount,
+        reffilledBottles: expense.refilled_bottles,
+        expenseDate: expense.date,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Expense deleted successfully");
+      queryClient.invalidateQueries({
+        queryKey: orpc.util.get30dOtherExpenses.queryKey(),
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to delete expense. Please try again.");
+    },
+  });
+
+  const handleDeleteClick = async () => {
+    const confirmed = await delete_confirm();
+    if (confirmed) {
+      deleteMutation.mutate();
+    }
+  };
+
+  return (
+    <>
+      <DeleteConfirmDialog />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleDeleteClick}
+        disabled={deleteMutation.isPending}
+        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+      >
+        {deleteMutation.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Trash2 className="h-4 w-4" />
+        )}
+      </Button>
+    </>
   );
 }
 
@@ -175,6 +245,19 @@ const columns: ColumnDef<columnSchema>[] = [
         <div className={"text-center"}>
           {row.original.OtherExpense.refilled_bottles}
         </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return (
+        <DeleteButton
+          expense={row.original.OtherExpense}
+          moderatorId={row.original.Moderator.id}
+        />
       );
     },
   },
