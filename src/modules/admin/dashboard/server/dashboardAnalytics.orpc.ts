@@ -23,6 +23,7 @@ export const DashboardAnalyticsSchema = z.object({
   usedBottles: z.number(),
   damagedBottles: z.number(),
   expenses: z.number(),
+  cashInHand: z.number(),
 });
 
 export const dashboardAnalyticsOrpc = adminProcedure
@@ -85,6 +86,7 @@ export const dashboardAnalyticsOrpc = adminProcedure
         damagedBottles,
         availableBottles,
         depositBottles,
+        cashInHand: totalRevenue - expenses,
       };
     } catch (error) {
       console.error("Error fetching dashboard analytics:", error);

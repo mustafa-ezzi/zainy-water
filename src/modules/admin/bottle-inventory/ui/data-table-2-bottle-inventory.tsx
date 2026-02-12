@@ -199,6 +199,20 @@ const columns: ColumnDef<columnSchema>[] = [
     ),
   },
   {
+    accessorKey: "cash_in_hand",
+    header: () => (
+      <div className={"w-full, text-center text-blue-500"}>Cash in Hand</div>
+    ),
+    cell: ({ row }) => {
+      const cashInHand = row.original.bottleUsage.revenue - row.original.bottleUsage.expense;
+      return (
+        <div className={`text-right font-semibold ${cashInHand >= 0 ? "text-blue-600" : "text-red-600"}`}>
+          {cashInHand}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "filled_bottles",
     header: () => <div className="w-full text-center">Filled</div>,
     cell: ({ row }) => (

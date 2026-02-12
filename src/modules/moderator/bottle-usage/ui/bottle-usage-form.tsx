@@ -421,6 +421,16 @@ export const BottleUsageForm = () => {
                 )}
               </span>
             </p>
+            <p className={"font-mono items-center grid grid-cols-2 gap-4"}>
+              <span>Cash in Hand:</span>
+              <span>
+                {bottleUsageData ? (
+                  `{ Rs. ${bottleUsageData.revenue - bottleUsageData.expense} }`
+                ) : (
+                  <Loader2 className={"animate-spin"} />
+                )}
+              </span>
+            </p>
           </div>
           <div className="w-full flex md:justify-end items-center gap-2">
             <Button

@@ -47,6 +47,15 @@ export function MainSectionCards({ data }: Props) {
       icon: <CircleDollarSign className="size-4" />,
     },
     {
+      id: "cash_in_hand",
+      title: "Cash in Hand (PKR)",
+      value: data.cashInHand,
+      href: "/admin/deliveries",
+      description: "Revenue minus expenses",
+      footer: "Account for this month",
+      icon: <CircleDollarSign className="size-4" />,
+    },
+    {
       id: "customers",
       title: "Active Customers",
       value: data.customerCount,
@@ -118,14 +127,16 @@ export function MainSectionCards({ data }: Props) {
             "@container/card",
             card.id === "total_revenue" &&
             (card.value < 0 ? "border-red-600/50" : "border-green-600/50"),
-            card.id === "expenses" && "border-yellow-600/50"
+            card.id === "expenses" && "border-yellow-600/50",
+            card.id === "cash_in_hand" &&
+            (card.value < 0 ? "border-red-600/50" : "border-green-600/50")
           )}
           key={card.id}
         >
           <CardHeader>
             <CardDescription>{card.title}</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl flex items-center gap-2">
-              {card.id === "total_revenue" ? (
+              {(card.id === "total_revenue" || card.id === "cash_in_hand") ? (
                 <SlidingNumber
                   number={card.value}
                   className={cn(
